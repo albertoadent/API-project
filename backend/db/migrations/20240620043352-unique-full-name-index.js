@@ -14,7 +14,8 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.addIndex("Users", ["firstName", "lastName"], {
+    options.tableName = "Users";
+    await queryInterface.addIndex(options, ["firstName", "lastName"], {
       unique: true,
     });
   },
