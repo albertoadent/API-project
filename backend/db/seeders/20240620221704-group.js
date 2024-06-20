@@ -1,7 +1,6 @@
 "use strict";
 
-const { User } = require("../models");
-const bcrypt = require("bcryptjs");
+const { Group } = require("../models");
 
 let options = {};
 if (process.env.NODE_ENV === "production") {
@@ -20,41 +19,42 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
      */
-    await User.bulkCreate(
+    await Group.bulkCreate(
       [
         {
-          email: "demo@user.io",
-          firstName: "Demo",
-          lastName: "Lition",
-          username: "Demo-lition",
-          hashedPassword: bcrypt.hashSync("password"),
+          organizerId: 1,
+          name: "First Group",
+          about: "null",
+          type: "In person",
+          private: true,
+          city: "Atlanta",
+          state: "GA",
+          numMembers: 1,
+          previewImage: "null",
         },
         {
-          email: "user1@user.io",
-          firstName: "User",
-          lastName: "One",
-          username: "FakeUser1",
-          hashedPassword: bcrypt.hashSync("password2"),
+          organizerId: 2,
+          name: "Second Group",
+          about: "null",
+          type: "In person",
+          private: true,
+          city: "Atlanta",
+          state: "GA",
+          numMembers: 1,
+          previewImage: "null",
         },
-        {
-          email: "user2@user.io",
-          firstName: "User",
-          lastName: "Two",
-          username: "FakeUser2",
-          hashedPassword: bcrypt.hashSync("password3"),
-        }
       ],
       { validate: true }
     );
   },
 
   async down(queryInterface, Sequelize) {
-    options.tableName = "Users";
+    options.tableName = "Groups";
     const Op = Sequelize.Op;
     return queryInterface.bulkDelete(
       options,
       {
-        username: { [Op.in]: ["Demo-lition", "FakeUser1", "FakeUser2"] },
+        name: { [Op.in]: ["First Group", "Second Group"] },
       },
       {}
     );
