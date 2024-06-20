@@ -1,6 +1,6 @@
 "use strict";
 
-const { Group_member } = require("../models");
+const { Venue } = require("../models");
 
 let options = {};
 if (process.env.NODE_ENV === "production") {
@@ -19,19 +19,24 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
      */
-    await Group_member.bulkCreate(
-      [
-        {
-          userId: 1,
-          groupId: 1,
-        },
-        {
-          userId: 2,
-          groupId: 2,
-        },
-      ],
-      { validate: true }
-    );
+    await Venue.bulkCreate([
+      {
+        groupId: 1,
+        address: "123 Passion Lane",
+        city: "Atlanta",
+        state: "GA",
+        lat: 1.23,
+        lng: 23.56,
+      },
+      {
+        groupId: 2,
+        address: "123 Passion Lane",
+        city: "Atlanta",
+        state: "GA",
+        lat: 1.23,
+        lng: 23.56,
+      },
+    ]);
   },
 
   async down(queryInterface, Sequelize) {
@@ -41,14 +46,5 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    options.tableName = "Groups";
-    const Op = Sequelize.Op;
-    return queryInterface.bulkDelete(
-      options,
-      {
-        id: { [Op.in]: [1, 2] },
-      },
-      {}
-    );
   },
 };
