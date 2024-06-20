@@ -8,11 +8,12 @@ const { User } = require("../../db/models");
 const { check } = require("express-validator");
 const { handleValidationErrors } = require("../../utils/validation");
 
-const validateLogin = [(req,res,next)=>{
-    const {username, email} = req.body
+const validateLogin = [
+  (req, res, next) => {
+    const { username, email } = req.body;
     req.body.credential = username ? username : email;
     return next();
-},
+  },
   check("credential")
     .exists({ checkFalsy: true })
     .notEmpty()
@@ -30,7 +31,7 @@ router.post("/", validateLogin, async (req, res, next) => {
   try {
     if (!((username || email) && password))
       throw new Error("insufficient credentials given");
-    const {credential} = req.body;
+    const { credential } = req.body;
     const user = await User.unscoped().findOne({
       where: {
         [Op.or]: { username: credential, email: credential },
@@ -54,6 +55,8 @@ router.post("/", validateLogin, async (req, res, next) => {
       id: user.id,
       email: user.email,
       username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
     };
 
     await setTokenCookie(res, safeUser);
@@ -76,6 +79,8 @@ router.get("/", (req, res) => {
       id: user.id,
       email: user.email,
       username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
     };
     return res.json({ user: safeUser });
   } else return res.json({ user: null });
