@@ -12,6 +12,7 @@ if (process.env.NODE_ENV === 'production') {
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
+    options.validate = true; 
     /**
      * Add seed commands here.
      *
@@ -43,7 +44,7 @@ module.exports = {
         username: 'FakeUser2',
         hashedPassword: bcrypt.hashSync('password3')
       }
-    ], { validate: true });
+    ],{validate:true});
   },
 
   async down (queryInterface, Sequelize) {
