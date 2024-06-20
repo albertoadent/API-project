@@ -14,16 +14,16 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    // options.tableName = "Users";
-    // await queryInterface.addIndex(options, ["firstName", "lastName"], {
-    //   unique: true,
-    //   name: 'idx_users_first_last_name_unique'
-    // });
+    options.tableName = "Users";
+    await queryInterface.addIndex(options, ["firstName", "lastName"], {
+      unique: true,
+      name: 'idx_users_first_last_name_unique'
+    });
   },
   
   async down(queryInterface, Sequelize) {
-    // options.tableName = "Users";
-    // await queryInterface.removeIndex(options, 'idx_users_first_last_name_unique');
+    options.tableName = "Users";
+    await queryInterface.removeIndex(options, 'idx_users_first_last_name_unique');
     /**
      * Add reverting commands here.
      *
