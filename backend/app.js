@@ -82,12 +82,13 @@ app.use((err, _req, _res, next) => {
     err.title = "Validation error";
     err.errors = errors;
   }
-  if (
-    err.errors.firstName === "firstName must be unique" &&
-    err.errors.lastName === "lastName must be unique"
-  ) {
-    err.errors.fullName = "That name has already been taken";
-  }
+  // if (
+  //   err.errors &&
+  //   err.errors.firstName === "firstName must be unique" &&
+  //   err.errors.lastName === "lastName must be unique"
+  // ) {
+  //   err.errors.fullName = "That name has already been taken";
+  // }
   next(err);
 });
 
