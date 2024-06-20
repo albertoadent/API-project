@@ -23,7 +23,7 @@ module.exports = {
   
   async down(queryInterface, Sequelize) {
     options.tableName = "Users";
-    await queryInterface.removeIndex(options, name: 'idx_users_first_last_name_unique');
+    await queryInterface.removeIndex(options, 'idx_users_first_last_name_unique');
     /**
      * Add reverting commands here.
      *
