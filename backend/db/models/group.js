@@ -8,19 +8,31 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
+      //User Relationships
       Group.belongsTo(models.User, {
         foreignKey: "organizerId",
-      });
-      Group.hasMany(models.Group_member, {
-        foreignKey: "groupId",
-        onDelete: "CASCADE",
-        hooks: true,
       });
       Group.belongsToMany(models.User, {
         through: models.Group_member,
         foreignKey: "groupId",
       });
+      
+      //Venue Relationships
       Group.hasMany(models.Venue, {
+        foreignKey: "groupId",
+        onDelete: "CASCADE",
+        hooks: true,
+      });
+      
+      //Event Relationships
+      Group.hasMany(models.Event, {
+        foreignKey: "eventId",
+        onDelete: "CASCADE",
+        hooks: true,
+      });
+      
+      //Group_member Relationships
+      Group.hasMany(models.Group_member, {
         foreignKey: "groupId",
         onDelete: "CASCADE",
         hooks: true,

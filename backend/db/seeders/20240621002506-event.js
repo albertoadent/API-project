@@ -1,6 +1,7 @@
 "use strict";
 
-const { Venue } = require("../models");
+const { DELETE } = require("sequelize/lib/query-types");
+const { Event } = require("../models");
 
 let options = {};
 if (process.env.NODE_ENV === "production") {
@@ -19,23 +20,27 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
      */
-    await Venue.bulkCreate(
+    await Event.bulkCreate(
       [
         {
           groupId: 1,
-          address: "123 Passion Lane",
-          city: "Atlanta",
-          state: "GA",
-          lat: 1.23,
-          lng: 23.56,
+          venueId: 1,
+          name: "this place",
+          type: "church",
+          startDate: Date.now(),
+          endDate: Date.now(),
+          numAttanding: 15,
+          previewImage: null,
         },
         {
-          groupId: 2,
-          address: "123 Passion Lane",
-          city: "Atlanta",
-          state: "GA",
-          lat: 1.23,
-          lng: 23.56,
+          groupId: 1,
+          venueId: 1,
+          name: "this place",
+          type: "church",
+          startDate: Date.now(),
+          endDate: Date.now(),
+          numAttanding: 15,
+          previewImage: null,
         },
       ],
       { validate: true }
@@ -49,7 +54,7 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    options.tableName = "Venues";
+    options.tableName = "Events";
     const Op = Sequelize.Op;
     return queryInterface.bulkDelete(
       options,
