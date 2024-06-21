@@ -1,10 +1,11 @@
 "use strict";
 
-const { Group_Member } = require("../models");
+const { Group_Image } = require("../models");
 
-let options = {};
+const options = {};
+
 if (process.env.NODE_ENV === "production") {
-  options.schema = process.env.SCHEMA; // define your schema in options object
+  options.schema = process.env.SCHEMA;
 }
 
 /** @type {import('sequelize-cli').Migration} */
@@ -19,36 +20,31 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
      */
-    await Group_Member.bulkCreate(
+
+    await Group_Image.bulkCreate(
       [
-        {
-          userId: 1,
-          groupId: 1,
-        },
-        {
-          userId: 2,
-          groupId: 2,
-        },
+        { groupId: 1, imageId: 2 },
+        { groupId: 2, imageId: 3 },
       ],
       { validate: true }
     );
   },
 
   async down(queryInterface, Sequelize) {
+    options.tableName = "Group_Images";
+
+    await queryInterface.bulkDelete(
+      options,
+      {
+        id: { [Sequelize.Op.in]: [1, 2] },
+      }
+    );
+
     /**
      * Add commands to revert seed here.
      *
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
-    options.tableName = "Groups";
-    const Op = Sequelize.Op;
-    return queryInterface.bulkDelete(
-      options,
-      {
-        id: { [Op.in]: [1, 2] },
-      },
-      {}
-    );
   },
 };

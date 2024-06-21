@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "organizerId",
       });
       Group.belongsToMany(models.User, {
-        through: models.Group_member,
+        through: models.Group_Member,
         foreignKey: "groupId",
       });
       
@@ -32,11 +32,16 @@ module.exports = (sequelize, DataTypes) => {
       });
       
       //Group_member Relationships
-      Group.hasMany(models.Group_member, {
+      Group.hasMany(models.Group_Member, {
         foreignKey: "groupId",
         onDelete: "CASCADE",
         hooks: true,
       });
+
+      Group.belongsToMany(models.Image,{
+        through: models.Group_Image,
+        foreignKey:"groupId"
+      })
     }
   }
   Group.init(

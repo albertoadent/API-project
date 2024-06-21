@@ -1,15 +1,16 @@
 "use strict";
 
-let options = {};
+const options = {};
+
 if (process.env.NODE_ENV === "production") {
-  options.schema = process.env.SCHEMA; // define your schema in options object
+  options.schema = process.env.SCHEMA;
 }
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable(
-      "Group_Members",
+      "Group_Images",
       {
         id: {
           allowNull: false,
@@ -17,17 +18,15 @@ module.exports = {
           primaryKey: true,
           type: Sequelize.INTEGER,
         },
-        userId: {
+        imageId: {
           type: Sequelize.INTEGER,
-          references: {
-            model: "Users",
-          },
+          allowNull: false,
+          references: { model: "Images" },
         },
         groupId: {
           type: Sequelize.INTEGER,
-          references: {
-            model: "Groups",
-          },
+          allowNull: false,
+          references: { model: "Groups" },
         },
         createdAt: {
           allowNull: false,
@@ -44,7 +43,7 @@ module.exports = {
     );
   },
   async down(queryInterface, Sequelize) {
-    options.tableName = "Group_Members";
+    options.tableName = "Group_Images";
     await queryInterface.dropTable(options);
   },
 };

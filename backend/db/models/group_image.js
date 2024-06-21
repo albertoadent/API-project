@@ -1,30 +1,25 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class Group_Member extends Model {
+  class Group_Image extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Group_Member.belongsTo(models.User, {
-        foreignKey: "userId",
-      });
-      Group_Member.belongsTo(models.Group, {
-        foreignKey: "groupId",
-      });
+      // define association here
     }
   }
-  Group_Member.init(
+  Group_Image.init(
     {
-      userId: { type: DataTypes.INTEGER, allowNull: false },
+      imageId: { type: DataTypes.INTEGER, allowNull: false },
       groupId: { type: DataTypes.INTEGER, allowNull: false },
     },
     {
       sequelize,
-      modelName: "Group_Member",
+      modelName: "Group_Image",
     }
   );
-  return Group_Member;
+  return Group_Image;
 };

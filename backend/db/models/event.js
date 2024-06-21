@@ -8,11 +8,36 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
+      //relationships to Group
       Event.belongsTo(models.Group, {
         foreignKey: "groupId",
       });
+
+      //relationships to Venue
       Event.belongsTo(models.Venue, {
         foreignKey: "venueId",
+      });
+
+      //relationships to join tables
+      Event.hasMany(models.Event_Image, {
+        foreignKey: "eventId",
+        onDelete: "CASCADE",
+        hooks: true,
+      });
+      Event.hasMany(models.Event_Member, {
+        foreignKey: "eventId",
+        onDelete: "CASCADE",
+        hooks: true,
+      });
+      Event.belongsToMany(models.User, {
+        through: models.Event_Member,
+        foreignKey: "eventId",
+        otherKey: "groupMemberId",
+      });
+
+      Event.belongsToMany(models.Image, {
+        through: models.Event_Image,
+        foreignKey: "eventId",
       });
     }
   }

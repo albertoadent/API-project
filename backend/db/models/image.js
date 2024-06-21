@@ -8,7 +8,25 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      Image.hasMany(models.Event_Member, {
+        foreignKey: "imageId",
+        onDelete: "CASCADE",
+        hooks: true,
+      });
+      Image.hasMany(models.Group_Image, {
+        foreignKey: "imageId",
+        onDelete: "CASCADE",
+        hooks: true,
+      });
+
+      Image.belongsToMany(models.Group, {
+        through: models.Group_Image,
+        foreignKey: "imageId",
+      });
+      Image.belongsToMany(models.Event, {
+        through: models.Event_Image,
+        foreignKey: "imageId",
+      });
     }
   }
   Image.init(

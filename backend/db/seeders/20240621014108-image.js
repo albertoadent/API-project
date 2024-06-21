@@ -30,6 +30,14 @@ module.exports = {
           url: "imageUrl2",
           preview: false,
         },
+        {
+          url: "imageUrl1",
+          preview: false,
+        },
+        {
+          url: "imageUrl2",
+          preview: false,
+        },
       ],
       { validate: true }
     );
@@ -40,7 +48,7 @@ module.exports = {
     await queryInterface.bulkDelete(
       options,
       {
-        url: { [Sequelize.Op.in]: ["imageUrl1", "imageUrl2"] },
+        id: { [Sequelize.Op.in]: [1,2] },
       },
       {}
     );
