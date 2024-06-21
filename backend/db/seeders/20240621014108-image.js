@@ -24,8 +24,12 @@ module.exports = {
       [
         {
           url: "imageUrl1",
+          preview: false,
         },
-        { url: "imageUrl2" },
+        {
+          url: "imageUrl2",
+          preview: false,
+        },
       ],
       { validate: true }
     );

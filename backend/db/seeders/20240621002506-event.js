@@ -1,6 +1,5 @@
 "use strict";
 
-const { DELETE } = require("sequelize/lib/query-types");
 const { Event } = require("../models");
 
 let options = {};
