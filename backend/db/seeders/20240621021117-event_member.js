@@ -33,7 +33,7 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    options.tableName = "Event_Mambers";
+    options.tableName = "Event_Members";
 
     await queryInterface.bulkDelete(options, {
       id: { [Sequelize.Op.in]: [1, 2] },
