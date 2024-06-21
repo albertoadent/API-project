@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Image.hasMany(models.Event_Member, {
+      Image.hasMany(models.Event_Image, {
         foreignKey: "imageId",
         onDelete: "CASCADE",
         hooks: true,
