@@ -32,30 +32,35 @@ const validateSignup = [
   handleValidationErrors,
 ];
 
-router.post("/", validateSignup, async (req, res) => {
+router.post("/", validateSignup, async (req, res, next) => {
   const { email, password, username, firstName, lastName } = req.body;
   const hashedPassword = bcrypt.hashSync(password);
-  const user = await User.create({
-    email,
-    username,
-    hashedPassword,
-    firstName,
-    lastName,
-  });
+  try {
+    const user = await User.create({
+      email,
+      username,
+      hashedPassword,
+      firstName,
+      lastName,
+    });
 
-  const safeUser = {
-    id: user.id,
-    email: user.email,
-    username: user.username,
-    firstName: user.firstName,
-    lastName: user.lastName,
-  };
+    const safeUser = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    };
 
-  await setTokenCookie(res, safeUser);
+    await setTokenCookie(res, safeUser);
 
-  return res.json({
-    user: safeUser,
-  });
+    return res.json({
+      user: safeUser,
+    });
+  } catch (err) {
+    err.status = 400;
+    next(err);
+  }
 });
 
 module.exports = router;

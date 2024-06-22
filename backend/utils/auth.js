@@ -30,6 +30,7 @@ const setTokenCookie = (res, user) => {
   return token;
 };
 
+
 const restoreUser = (req, res, next) => {
   // token parsed from cookies
   const { token } = req.cookies;
@@ -68,7 +69,40 @@ const requireAuth = function (req, _res, next) {
   return next(err);
 };
 
+
+/**
+ * Middleware to check user access to a resource.
+ *
+ * @param {object} Model - The Sequelize model to check access against. (make sure that your Id is formatted {modelname}Id)
+ * @returns {Function} - The middleware function.
+ */
+
+const checkAccessTo = (Model) => async (req, res, next) => {
+  const { user } = req;
+
+  const id = req.params[`${Model.name.toLowerCase()}Id`];
+
+  if (!id) return next();
+
+  try {
+    const group = await Model.findByPk(id);
+    if (!group) {
+      const err = new Error(`${Model.name} does not exist at id: ${id}`);
+      err.status = 404;
+      throw err;
+    }
+    if (group.organizerId != user.id) {
+      const err = new Error(`User does not have access to this ${Model.name}`);
+      err.status = 403;
+      throw err;
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+
 // backend/utils/auth.js
 // ...
 
-module.exports = { setTokenCookie, restoreUser, requireAuth };
+module.exports = { setTokenCookie, restoreUser, requireAuth, checkAccessTo };

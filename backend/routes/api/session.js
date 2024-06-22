@@ -2,7 +2,7 @@ const express = require("express");
 const { Op } = require("sequelize");
 const bcrypt = require("bcryptjs");
 
-const { setTokenCookie, restoreUser } = require("../../utils/auth");
+const { setTokenCookie, restoreUser,requireAuth } = require("../../utils/auth");
 const { User } = require("../../db/models");
 
 const { check } = require("express-validator");
@@ -27,11 +27,10 @@ const validateLogin = [
 const router = express.Router();
 
 router.post("/", validateLogin, async (req, res, next) => {
-  const { username, password, email } = req.body;
+  const { username, password, email, credential } = req.body;
   try {
     if (!((username || email) && password))
       throw new Error("insufficient credentials given");
-    const { credential } = req.body;
     const user = await User.unscoped().findOne({
       where: {
         [Op.or]: { username: credential, email: credential },
@@ -71,6 +70,8 @@ router.delete("/", (_req, res) => {
   res.clearCookie("token");
   return res.json({ message: "success" });
 });
+
+// router.use(requireAuth);
 
 router.get("/", (req, res) => {
   const { user } = req;

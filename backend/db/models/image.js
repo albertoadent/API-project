@@ -22,10 +22,12 @@ module.exports = (sequelize, DataTypes) => {
       Image.belongsToMany(models.Group, {
         through: models.Group_Image,
         foreignKey: "imageId",
+        onDelete:"CASCADE"
       });
       Image.belongsToMany(models.Event, {
         through: models.Event_Image,
         foreignKey: "imageId",
+        onDelete:"CASCADE"
       });
     }
   }

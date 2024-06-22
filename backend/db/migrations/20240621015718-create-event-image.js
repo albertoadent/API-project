@@ -22,11 +22,13 @@ module.exports = {
           type: Sequelize.INTEGER,
           allowNull: false,
           references: { model: "Images" },
+          onDelete:"CASCADE"
         },
         eventId: {
           type: Sequelize.INTEGER,
           allowNull: false,
           references: { model: "Events" },
+          onDelete:"CASCADE"
         },
         createdAt: {
           allowNull: false,

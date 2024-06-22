@@ -23,12 +23,17 @@ module.exports = {
           references: {
             model: "Groups",
           },
+          onDelete:"CASCADE"
         },
         address: {
           type: Sequelize.STRING,
           allowNull: false,
         },
         city: {
+          type: Sequelize.STRING,
+          allowNull: false,
+        },
+        state: {
           type: Sequelize.STRING,
           allowNull: false,
         },
@@ -55,7 +60,7 @@ module.exports = {
     );
   },
   async down(queryInterface, Sequelize) {
-    options.tableName = "Venues"
+    options.tableName = "Venues";
     await queryInterface.dropTable(options);
   },
 };

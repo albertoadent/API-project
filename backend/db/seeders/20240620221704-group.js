@@ -24,7 +24,7 @@ module.exports = {
         {
           organizerId: 1,
           name: "First Group",
-          about: "null",
+          about: "this group is a group about a group that does the group",
           type: "In person",
           private: true,
           city: "Atlanta",
@@ -35,7 +35,7 @@ module.exports = {
         {
           organizerId: 2,
           name: "Second Group",
-          about: "null",
+          about: "this group is a group about a group that does the group",
           type: "In person",
           private: true,
           city: "Atlanta",

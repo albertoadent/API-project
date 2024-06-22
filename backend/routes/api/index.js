@@ -67,11 +67,15 @@ router.get("/set-token-cookie", async (_req, res) => {
 
 const sessionRouter = require("./session");
 const usersRouter = require("./users");
+const groupsRouter = require("./groups");
+const venuesRouter = require("./venues");
 
 router.use("/session", sessionRouter);
 router.use("/users", usersRouter);
+router.use("/groups", groupsRouter);
+router.use("/venues", venuesRouter);
 
-router.use(requireAuth);
+// router.use(requireAuth);
 
 // router.use([() => null]); //all routes that require authentication
 

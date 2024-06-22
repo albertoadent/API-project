@@ -10,9 +10,11 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Group_Member.belongsTo(models.User, {
         foreignKey: "userId",
+        onDelete:"CASCADE"
       });
       Group_Member.belongsTo(models.Group, {
         foreignKey: "groupId",
+        onDelete:"CASCADE"
       });
     }
   }

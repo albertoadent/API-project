@@ -21,14 +21,15 @@ module.exports = (sequelize, DataTypes) => {
       User.belongsToMany(models.Group, {
         through: models.Group_Member,
         foreignKey: "userId",
+        onDelete:"CASCADE"
       });
 
       User.belongsToMany(models.Event, {
         through: models.Event_Member,
         foreignKey: "groupMemberId",
         otherKey: "eventId",
+        onDelete:"CASCADE"
       });
-
     }
   }
   User.init(
@@ -51,6 +52,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         validate: {
           len: [1, 50],
+          notNull: {
+            args: true,
+            msg: "First Name is required",
+          },
         },
       },
       lastName: {
@@ -58,6 +63,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         validate: {
           len: [1, 50],
+          notNull: {
+            args: true,
+            msg: "Last Name is required",
+          },
         },
       },
       email: {
@@ -66,7 +75,10 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
         validate: {
           len: [3, 255],
-          isEmail: true,
+          isEmail: {
+            args: true,
+            msg: "Invalid email",
+          },
         },
       },
       hashedPassword: {

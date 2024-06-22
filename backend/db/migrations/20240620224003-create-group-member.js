@@ -22,12 +22,14 @@ module.exports = {
           references: {
             model: "Users",
           },
+          onDelete:"CASCADE"
         },
         groupId: {
           type: Sequelize.INTEGER,
           references: {
             model: "Groups",
           },
+          onDelete:"CASCADE"
         },
         createdAt: {
           allowNull: false,
