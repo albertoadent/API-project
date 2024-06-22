@@ -21,14 +21,14 @@ module.exports = (sequelize, DataTypes) => {
       User.belongsToMany(models.Group, {
         through: models.Group_Member,
         foreignKey: "userId",
-        onDelete:"CASCADE"
+        onDelete: "CASCADE",
       });
 
       User.belongsToMany(models.Event, {
         through: models.Event_Member,
         foreignKey: "groupMemberId",
         otherKey: "eventId",
-        onDelete:"CASCADE"
+        onDelete: "CASCADE",
       });
     }
   }
@@ -92,6 +92,11 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "User",
+      defaultScope: {
+        attributes: {
+          exclude: ["hashedPassword", "email", "createdAt", "updatedAt"],
+        },
+      },
     }
   );
   return User;
