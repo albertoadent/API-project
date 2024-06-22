@@ -1,7 +1,11 @@
 // backend/routes/api/index.js
 const router = require("express").Router();
 
-const { restoreUser, requireAuth,setTokenCookie } = require("../../utils/auth.js");
+const {
+  restoreUser,
+  requireAuth,
+  setTokenCookie,
+} = require("../../utils/auth.js");
 
 const { User } = require("../../db/models");
 /*
@@ -69,11 +73,13 @@ const sessionRouter = require("./session");
 const usersRouter = require("./users");
 const groupsRouter = require("./groups");
 const venuesRouter = require("./venues");
+const eventsRouter = require("./events");
 
 router.use("/session", sessionRouter);
 router.use("/users", usersRouter);
 router.use("/groups", groupsRouter);
 router.use("/venues", venuesRouter);
+router.use("/venues", eventsRouter);
 
 // router.use(requireAuth);
 

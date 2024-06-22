@@ -30,7 +30,6 @@ const setTokenCookie = (res, user) => {
   return token;
 };
 
-
 const restoreUser = (req, res, next) => {
   // token parsed from cookies
   const { token } = req.cookies;
@@ -69,39 +68,66 @@ const requireAuth = function (req, _res, next) {
   return next(err);
 };
 
-
 /**
  * Middleware to check user access to a resource.
  *
  * @param {object} Model - The Sequelize model to check access against. (make sure that your Id is formatted {modelname}Id)
+ * @param {object} options - Must include at least the foreign key that would allow access to the model (defaults to {modelname}Id)
  * @returns {Function} - The middleware function.
  */
 
-const checkAccessTo = (Model, foreignKey = `${Model.name.toLowerCase()}Id`) => async (req, res, next) => {
-  
-  const { user } = req;
+const checkAccessTo =
+  (Model, options = {}) =>
+  async (req, res, next) => {
+    const { user } = req;
 
-  const id = req.params[`${Model.name.toLowerCase()}Id`];
+    let id = req.params[`${Model.name.toLowerCase()}Id`];
 
-  if (!id) return next();
+    if (!id) return next();
 
-  try {
-    const model = await Model.findByPk(id);
-    if (!model) {
-      const err = new Error(`${Model.name} does not exist at id: ${id}`);
-      err.status = 404;
-      throw err;
+    try {
+      if (options.through) {
+        const through = await options.through.model.findByPk(id);
+        if (!through) {
+          const err = new Error(`Through model does not exist at id: ${id}`);
+          err.status = 404;
+          throw err;
+        }
+        id = through.id;
+      }
+      const modelInstance = await Model.findByPk(id);
+      if (!modelInstance) {
+        const err = new Error(`${Model.name} does not exist at id: ${id}`);
+        err.status = 404;
+        throw err;
+      }
+      const foreignKey = options.foreignKey || "userId";
+      if (modelInstance[foreignKey] != user.id) {
+        const err = new Error(
+          `User does not have access to this ${Model.name}`
+        );
+        err.status = 403;
+        throw err;
+      }
+      if (options.validate) {
+        // options.validate.__extra = ()=>null;
+        const { key, ...validators } = options.validate;
+        // console.log(validators);
+        for (const validation of Object.values(validators)) {
+          // console.log('Function ==>>>>',validation);
+          validation instanceof Promise
+            ? await validation(
+                modelInstance.key ? modelInstance.key : modelInstance,user
+              )
+            : validation(modelInstance.key ? modelInstance.key : modelInstance,user);
+        }
+      }
+      req[`${Model.name.toLowerCase()}`] = modelInstance;
+      next();
+    } catch (err) {
+      next(err);
     }
-    if (model[foreignKey] != user.id) {
-      const err = new Error(`User does not have access to this ${Model.name}`);
-      err.status = 403;
-      throw err;
-    }
-    next();
-  } catch (err) {
-    next(err);
-  }
-};
+  };
 
 // backend/utils/auth.js
 // ...

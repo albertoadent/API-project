@@ -1,6 +1,6 @@
 "use strict";
 
-const { Group_Member } = require("../models");
+const { Group } = require("../models");
 
 let options = {};
 if (process.env.NODE_ENV === "production") {
@@ -19,19 +19,13 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
      */
-    await Group_Member.bulkCreate(
-      [
-        {
-          userId: 1,
-          groupId: 1,
-        },
-        {
-          userId: 2,
-          groupId: 2,
-        },
-      ],
-      { validate: true }
-    );
+
+    const group1 = await Group.findByPk(1);
+    const group2 = await Group.findByPk(2);
+
+    await group1.createGroup_Member({userId:1});
+    await group2.createGroup_Member({userId:2});
+
   },
 
   async down(queryInterface, Sequelize) {

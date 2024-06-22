@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Venue.belongsTo(models.Group, {
         foreignKey: "groupId",
-        onDelete:"CASCADE"
+        onDelete: "CASCADE",
       });
       Venue.hasMany(models.Event, {
         foreignKey: "venueId",
@@ -22,11 +22,76 @@ module.exports = (sequelize, DataTypes) => {
   Venue.init(
     {
       groupId: { type: DataTypes.INTEGER, allowNull: false },
-      address: { type: DataTypes.STRING, allowNull: false },
-      city: { type: DataTypes.STRING, allowNull: false },
-      state:{type: DataTypes.STRING, allowNull: false},
-      lat: { type: DataTypes.DECIMAL, allowNull: false },
-      lng: { type: DataTypes.DECIMAL, allowNull: false },
+      address: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            args: true,
+            msg: "Street address is required",
+          },
+          notNull: {
+            args: true,
+            msg: "Street address is required",
+          },
+        },
+      },
+      city: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            args: true,
+            msg: "City is required",
+          },
+          notNull: {
+            args: true,
+            msg: "City is required",
+          },
+        },
+      },
+      state: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: {
+            args: true,
+            msg: "State is required",
+          },
+          notNull: {
+            args: true,
+            msg: "State is required",
+          },
+        },
+      },
+      lat: {
+        type: DataTypes.DECIMAL,
+        allowNull: false,
+        validate: {
+          min: {
+            args: -90.0,
+            msg: "latitude cannot be less than -90",
+          },
+          max: {
+            args: 90.0,
+            msg: "latitude cannot be greater than 90",
+          },
+        },
+      },
+      lng: {
+        type: DataTypes.DECIMAL,
+        allowNull: false,
+        validate: {
+          min: {
+            args: -180.0,
+            msg: "longitute cannot be less than -180",
+          },
+          max: {
+            args: 180.0,
+            msg: "longitute cannot be greater than 180",
+          },
+        },
+      },
     },
     {
       sequelize,

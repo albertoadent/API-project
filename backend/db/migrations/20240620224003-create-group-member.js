@@ -22,14 +22,19 @@ module.exports = {
           references: {
             model: "Users",
           },
-          onDelete:"CASCADE"
+          onDelete: "CASCADE",
         },
         groupId: {
           type: Sequelize.INTEGER,
           references: {
             model: "Groups",
           },
-          onDelete:"CASCADE"
+          onDelete: "CASCADE",
+        },
+        role: {
+          type: Sequelize.STRING,
+          allowNull: false,
+          defaultValue: "organizer",
         },
         createdAt: {
           allowNull: false,
@@ -44,9 +49,15 @@ module.exports = {
       },
       options
     );
+    options.tableName = "Group_Members";
+    await queryInterface.addIndex(options, ["userId", "groupId"], {
+      unique: true,
+      name: "idx_group_member_userId_groupId"
+    });
   },
   async down(queryInterface, Sequelize) {
     options.tableName = "Group_Members";
     await queryInterface.dropTable(options);
+    await queryInterface.removeIndex(options, "idx_group_member_userId_groupId");
   },
 };
