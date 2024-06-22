@@ -61,7 +61,7 @@ router.post("/", requireAuth, async (req, res, next) => {
 /*           CREATE IMAGE WITH A GROUP ID              */
 router.post(
   "/:groupId/images",
-  [requireAuth, checkAccessTo(Group)],
+  [requireAuth, checkAccessTo(Group,"organizerId")],
   async (req, res, next) => {
     const { groupId } = req.params;
     try {
@@ -76,7 +76,7 @@ router.post(
 );
 
 /*           CREATE IMAGE WITH A GROUP ID              */
-router.put("/:groupId", [requireAuth, checkAccessTo(Group)], async (req, res, next) => {
+router.put("/:groupId", [requireAuth, checkAccessTo(Group,"organizerId")], async (req, res, next) => {
   const { user } = req;
   const { groupId } = req.params;
   try {
@@ -90,7 +90,7 @@ router.put("/:groupId", [requireAuth, checkAccessTo(Group)], async (req, res, ne
 });
 
 /*           DELETE GROUP WITH GROUP ID             */
-router.delete("/:groupId",[requireAuth, checkAccessTo(Group)], async (req, res, next) => {
+router.delete("/:groupId",[requireAuth, checkAccessTo(Group,"organizerId")], async (req, res, next) => {
   const { groupId } = req.params;
   try {
     const group = await Group.findByPk(groupId);

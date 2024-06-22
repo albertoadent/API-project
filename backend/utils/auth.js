@@ -77,7 +77,8 @@ const requireAuth = function (req, _res, next) {
  * @returns {Function} - The middleware function.
  */
 
-const checkAccessTo = (Model) => async (req, res, next) => {
+const checkAccessTo = (Model, foreignKey = `${Model.name.toLowerCase()}Id`) => async (req, res, next) => {
+  
   const { user } = req;
 
   const id = req.params[`${Model.name.toLowerCase()}Id`];
@@ -85,13 +86,13 @@ const checkAccessTo = (Model) => async (req, res, next) => {
   if (!id) return next();
 
   try {
-    const group = await Model.findByPk(id);
-    if (!group) {
+    const model = await Model.findByPk(id);
+    if (!model) {
       const err = new Error(`${Model.name} does not exist at id: ${id}`);
       err.status = 404;
       throw err;
     }
-    if (group.organizerId != user.id) {
+    if (model[foreignKey] != user.id) {
       const err = new Error(`User does not have access to this ${Model.name}`);
       err.status = 403;
       throw err;

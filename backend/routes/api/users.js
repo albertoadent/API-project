@@ -63,4 +63,10 @@ router.post("/", validateSignup, async (req, res, next) => {
   }
 });
 
+router.get("/all", async (req, res) => {
+  let allUsers = await User.findAll();
+  res.status(200);
+  return res.json(allUsers);
+});
+
 module.exports = router;
