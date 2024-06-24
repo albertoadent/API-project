@@ -336,9 +336,14 @@ router.delete(
   async (req, res, next) => {
     const [{ group, user }, { groupId, userId }] = [req, req.params];
     try {
+
+      
+      const organizer = await group.getOrganizer();
+      
+      console.log(userId,organizer.id,user.id);
       const [deleteMembership] =await group.getGroup_Members({
         where:{
-          userId
+          userId:userId
         }
       });
 
@@ -349,9 +354,14 @@ router.delete(
         error.status = 404;
         throw error;
       }
+      
+      if (organizer.id == user.id) {
+        
+        console.log('USER IS ORGANIZER')
+        console.log(userId,organizer.id,user.id);
 
-      if (group.organizerId === user.id) {
-        if (user.id === userId) {
+        if (user.id == userId) {
+          console.log("ORGANIZER ATTEMPTING TO DELTE THEMSELVES")
           const error = new Error("Validation Error");
           error.status = 400;
           error.errors = {
@@ -360,6 +370,8 @@ router.delete(
           throw error;
         }
 
+        console.log("ORGANIZER ATTEMPTING TO DESTROY SOMEONE ELSE")
+
         await deleteMembership.destroy();
 
         return res.json({
@@ -367,12 +379,12 @@ router.delete(
         })
       }
 
-      if (user.id === userId) {
+      if (user.id == userId) {
 
         await deleteMembership.destroy();
 
         return res.json({
-          "message": "Successfully deleted membership from group"
+          "message": "Successfully deleted your membership from group"
         })
 
       }
