@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       Event_Member.belongsTo(models.Event, {
         foreignKey: "eventId",
         onDelete: "CASCADE",
+        hooks: true,
       });
       Event_Member.belongsTo(models.Group_Member, {
         foreignKey: "groupMemberId",
@@ -26,6 +27,18 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Event_Member",
+      hooks: {
+        afterCreate: async (eventMember, options) => {
+          const event = await eventMember.getEvent();
+          await event.increment("numAttending");
+          // console.log(`Incremented numAttending for Event ${event.id}`);
+        },
+        afterDestroy: async (eventMember, options) => {
+          const event = await eventMember.getEvent();
+          await event.decrement("numAttending");
+          // console.log(`Decremented numAttending for Event ${event.id}`);
+        },
+      },
     }
   );
   return Event_Member;

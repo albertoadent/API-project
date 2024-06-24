@@ -19,31 +19,29 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
      */
-    await Event.bulkCreate(
-      [
-        {
-          groupId: 1,
-          venueId: 1,
-          name: "this place",
-          type: "church",
-          startDate: Date.now(),
-          endDate: Date.now(),
-          numAttanding: 15,
-          previewImage: null,
-        },
-        {
-          groupId: 1,
-          venueId: 1,
-          name: "this place",
-          type: "church",
-          startDate: Date.now(),
-          endDate: Date.now(),
-          numAttanding: 15,
-          previewImage: null,
-        },
-      ],
-      { validate: true }
-    );
+
+    await Event.create({
+      groupId: 1,
+      venueId: 1,
+      name: "this place",
+      type: "Online",
+      startDate: "2025-11-19 20:00:00",
+      endDate: "2025-11-19 22:00:00",
+      capacity: 15,
+      price: 10.0,
+      previewImage: null,
+    });
+    await Event.create({
+      groupId: 2,
+      venueId: 2,
+      name: "this place",
+      type: "In person",
+      startDate: "2025-11-19 20:00:00",
+      endDate: "2025-11-19 22:00:00",
+      capacity: 15,
+      price: 10.0,
+      previewImage: null,
+    });
   },
 
   async down(queryInterface, Sequelize) {

@@ -1,6 +1,7 @@
 // backend/routes/index.js
 const express = require('express');
 const router = express.Router();
+const { handleValidationErrors } = require('../utils/validation');
 
 
 // Add a XSRF-TOKEN cookie

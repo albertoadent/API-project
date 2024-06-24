@@ -9,6 +9,8 @@ const {
   restoreUser,
   requireAuth,
   checkAccessTo,
+  exists,
+  isGroupAdmin,
 } = require("../../utils/auth");
 
 // router.use(requireAuth);
@@ -16,8 +18,11 @@ const {
 /*           EDIT VENUE WITH VENUE ID             */
 router.put(
   "/:venueId",
-  requireAuth,
-  checkAccessTo(Venue,{foreignKey:"groupId",through:{model:Group}}),
+  [
+    requireAuth,
+    exists,
+    isGroupAdmin(['owner','co-host'],Venue,Group),
+  ],
   async (req, res, next) => {
     const { user, venue } = req;
     try {

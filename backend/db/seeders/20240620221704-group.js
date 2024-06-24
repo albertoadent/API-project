@@ -54,7 +54,7 @@ module.exports = {
     return queryInterface.bulkDelete(
       options,
       {
-        name: { [Op.in]: ["First Group", "Second Group"] },
+        W: { [Op.in]: ["First Group", "Second Group"] },
       },
       {}
     );

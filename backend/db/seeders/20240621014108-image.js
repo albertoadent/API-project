@@ -48,7 +48,7 @@ module.exports = {
     await queryInterface.bulkDelete(
       options,
       {
-        id: { [Sequelize.Op.in]: [1,2] },
+        id: { [Sequelize.Op.in]: [1,2,3,4] },
       },
       {}
     );

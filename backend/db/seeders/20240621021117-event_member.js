@@ -21,15 +21,9 @@ module.exports = {
      * }], {});
      */
 
-    await Event_Member.bulkCreate(
-      [
-        { groupMemberId: 1, eventId: 1 },
-        { groupMemberId: 2, eventId: 2 },
-      ],
-      {
-        validate: true,
-      }
-    );
+    await Event_Member.create({ groupMemberId: 1, eventId: 1 });
+    await Event_Member.create({ groupMemberId: 2, eventId: 1 });
+    await Event_Member.create({ groupMemberId: 2, eventId: 2 });
   },
 
   async down(queryInterface, Sequelize) {

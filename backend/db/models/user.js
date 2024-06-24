@@ -7,6 +7,40 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
+
+    async getMemberships(){
+      return sequelize.models.Group_Member.findAll({
+        where:{
+          userId:this.id,
+          role:'member'
+        }
+      })
+    }
+    async getOrganizerships(){
+      return sequelize.models.Group_Member.findAll({
+        where:{
+          userId:this.id,
+          role:'organizer'
+        }
+      })
+    }
+    async getCoHostships(){
+      return sequelize.models.Group_Member.findAll({
+        where:{
+          userId:this.id,
+          role:'co-host'
+        }
+      })
+    }
+    async getPendingships(){
+      return sequelize.models.Group_Member.findAll({
+        where:{
+          userId:this.id,
+          role:'pending'
+        }
+      })
+    }
+
     static associate(models) {
       User.hasMany(models.Group, {
         foreignKey: "organizerId",
@@ -99,5 +133,6 @@ module.exports = (sequelize, DataTypes) => {
       },
     }
   );
+
   return User;
 };

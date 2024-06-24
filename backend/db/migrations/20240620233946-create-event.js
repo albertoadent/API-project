@@ -22,7 +22,7 @@ module.exports = {
           references: {
             model: "Groups",
           },
-          onDelete:"CASCADE"
+          onDelete: "CASCADE",
         },
         venueId: {
           type: Sequelize.INTEGER,
@@ -30,7 +30,7 @@ module.exports = {
           references: {
             model: "Venues",
           },
-          onDelete:"CASCADE"
+          onDelete: "CASCADE",
         },
         name: {
           type: Sequelize.STRING,
@@ -40,12 +40,31 @@ module.exports = {
           type: Sequelize.STRING,
           allowNull: false,
         },
+        description: {
+          type: Sequelize.STRING,
+          allowNull: false,
+          defaultValue: "none",
+        },
         startDate: {
           type: Sequelize.DATE,
           allowNull: false,
         },
         endDate: {
           type: Sequelize.DATE,
+          allowNull: false,
+        },
+        capacity: {
+          type: Sequelize.INTEGER,
+          allowNull: false,
+          defaultValue: 1,
+        },
+        price:{
+          type: Sequelize.DECIMAL,
+          allowNull:false
+        },
+        numAttending: {
+          type: Sequelize.INTEGER,
+          defaultValue: 0,
           allowNull: false,
         },
         previewImage: {

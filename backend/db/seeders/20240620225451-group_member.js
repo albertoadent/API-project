@@ -24,6 +24,7 @@ module.exports = {
     const group2 = await Group.findByPk(2);
 
     await group1.createGroup_Member({userId:1});
+    await group1.createGroup_Member({userId:3});
     await group2.createGroup_Member({userId:2});
 
   },

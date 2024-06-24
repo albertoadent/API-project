@@ -89,6 +89,16 @@ app.use((err, _req, _res, next) => {
 // ...
 // Error formatter
 app.use((err, _req, res, _next) => {
+  if(err.status && !err.title){
+    switch(err.status){
+      case 404:
+        err.title = err.message||"Resource Not Found"
+        break;
+      case 400:
+        err.title = err.message||"Validation Error"
+        break;
+    }
+  }
   res.status(err.status || 500);
   console.error(err);
   res.json({

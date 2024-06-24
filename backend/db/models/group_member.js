@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: "organizer",
         validate: {
           isRole(role) {
-            const validRoles = ["organizer", "co-host", "member"];
+            const validRoles = ["organizer", "co-host", "member","pending"];
             if (!validRoles.includes(role)) {
               throw new Error("not a valid role for group member");
             }

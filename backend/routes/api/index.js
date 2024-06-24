@@ -79,7 +79,7 @@ router.use("/session", sessionRouter);
 router.use("/users", usersRouter);
 router.use("/groups", groupsRouter);
 router.use("/venues", venuesRouter);
-router.use("/venues", eventsRouter);
+router.use("/events", eventsRouter);
 
 // router.use(requireAuth);
 

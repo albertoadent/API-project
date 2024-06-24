@@ -7,16 +7,42 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
+
+    async getMembers() {
+      return this.getGroup_Members({
+        where: {
+          role: "member",
+        },
+      });
+    }
+    async getOrganizer() {
+      return sequelize.models.User.findByPk(this.organizerId);
+    }
+    async getCoHosts() {
+      return this.getGroup_Members({
+        where: {
+          role: "co-host",
+        },
+      });
+    }
+    async getPendings() {
+      return this.getGroup_Members({
+        where: {
+          role: "pending",
+        },
+      });
+    }
+
     static associate(models) {
       //User Relationships
       Group.belongsTo(models.User, {
         foreignKey: "organizerId",
-        onDelete:"CASCADE"
+        onDelete: "CASCADE",
       });
       Group.belongsToMany(models.User, {
         through: models.Group_Member,
         foreignKey: "groupId",
-        onDelete:"CASCADE"
+        onDelete: "CASCADE",
       });
 
       //Venue Relationships
@@ -43,7 +69,7 @@ module.exports = (sequelize, DataTypes) => {
       Group.belongsToMany(models.Image, {
         through: models.Group_Image,
         foreignKey: "groupId",
-        onDelete:"CASCADE"
+        onDelete: "CASCADE",
       });
     }
   }

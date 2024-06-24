@@ -10,8 +10,8 @@ const { handleValidationErrors } = require("../../utils/validation");
 
 const validateLogin = [
   (req, res, next) => {
-    const { username, email } = req.body;
-    req.body.credential = username ? username : email;
+    const { credential, username, email } = req.body;
+    req.body.credential = credential? credential: username ? username : email;
     return next();
   },
   check("credential")
