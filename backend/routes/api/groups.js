@@ -1,6 +1,14 @@
 const express = require("express");
 
-const { Group, Venue, Event, User } = require("../../db/models");
+const {
+  Group,
+  Venue,
+  Event,
+  User,
+  Group_Member,
+  sequelize,
+  Sequelize,
+} = require("../../db/models");
 
 const router = express.Router();
 
@@ -8,14 +16,11 @@ const {
   setTokenCookie,
   restoreUser,
   requireAuth,
-  checkAccessTo,
-  /*custom authenticator that checks if 
-  the current user has access to the model 
-  they are attemting to access*/
   exists,
-  isGroupAdmin,
+  isAuthorizedMember,
+  fullCheck,
 } = require("../../utils/auth");
-const user = require("../../db/models/user");
+const { Hooks } = require("sequelize/lib/hooks");
 const { where } = require("sequelize");
 
 /*           GET ALL GROUPS               */
@@ -63,60 +68,48 @@ router.post("/", requireAuth, async (req, res, next) => {
 });
 
 /*           CREATE IMAGE WITH A GROUP ID              */
-router.post(
-  "/:groupId/images",
-  [exists, requireAuth, isGroupAdmin(["organizer"])],
-  async (req, res, next) => {
-    const { groupId } = req.params;
-    try {
-      const group = await Group.findByPk(groupId);
+router.post("/:groupId/images", fullCheck(), async (req, res, next) => {
+  const { groupId } = req.params;
+  try {
+    const group = await Group.findByPk(groupId);
 
-      const img = await group.createImage(req.body);
-      res.json(img);
-    } catch (err) {
-      next(err);
-    }
+    const img = await group.createImage(req.body);
+    res.json(img);
+  } catch (err) {
+    next(err);
   }
-);
+});
 
 /*           EDIT A GROUP WITH GROUP ID              */
-router.put(
-  "/:groupId",
-  [exists, requireAuth, isGroupAdmin(["organizer"])],
-  async (req, res, next) => {
-    const { user } = req;
-    const { groupId } = req.params;
-    try {
-      const group = await Group.findByPk(groupId);
-      const data = await group.update({ ...req.body, updatedAt: Date.now() });
-      return res.json({ data });
-    } catch (err) {
-      err.status = 400;
-      next(err);
-    }
+router.put("/:groupId", fullCheck(), async (req, res, next) => {
+  const { user } = req;
+  const { groupId } = req.params;
+  try {
+    const group = await Group.findByPk(groupId);
+    const data = await group.update({ ...req.body, updatedAt: Date.now() });
+    return res.json({ data });
+  } catch (err) {
+    err.status = 400;
+    next(err);
   }
-);
+});
 
 /*           DELETE GROUP WITH GROUP ID             */
-router.delete(
-  "/:groupId",
-  [exists, requireAuth, isGroupAdmin(["organizer"])],
-  async (req, res, next) => {
-    const { groupId } = req.params;
-    try {
-      const group = await Group.findByPk(groupId);
-      await group.destroy();
-      return res.status(200).json({ message: "Successfully deleted" });
-    } catch (err) {
-      next(err);
-    }
+router.delete("/:groupId", fullCheck(), async (req, res, next) => {
+  const { groupId } = req.params;
+  try {
+    const group = await Group.findByPk(groupId);
+    await group.destroy();
+    return res.status(200).json({ message: "Successfully deleted" });
+  } catch (err) {
+    next(err);
   }
-);
+});
 
 /*           GET VENUES WITH GROUP ID             */
 router.get(
   "/:groupId/venues",
-  [requireAuth, exists, isGroupAdmin()],
+  fullCheck("organizer", "co-host"),
   async (req, res, next) => {
     const { user, group } = req;
     const venues = await group.getVenues();
@@ -127,7 +120,7 @@ router.get(
 /*           CREATE VENUE WITH GROUP ID             */
 router.post(
   "/:groupId/venues",
-  [requireAuth, exists, isGroupAdmin],
+  fullCheck(["organizer", "co-host"]),
   async (req, res, next) => {
     const { user, group } = req;
     try {
@@ -157,7 +150,7 @@ router.get("/:groupId/events", exists, async (req, res, next) => {
 /*           CREATE EVENTS WITH GROUP ID             */
 router.post(
   "/:groupId/events",
-  [exists, isGroupAdmin()],
+  fullCheck(["organizer", "co-host"]),
   async (req, res, next) => {
     const [{ group }, { groupId }] = [req, req.params];
     try {
@@ -243,13 +236,22 @@ router.post(
 /*           CHANGE MEMBERSHIP STATUS WITH GROUP ID             */
 router.put(
   "/:groupId/membership",
-  [requireAuth, exists, isGroupAdmin()],
+  fullCheck("organizer", "co-host"),
   async (req, res, next) => {
     const [{ group, user }, { groupId }] = [req, req.params];
     const { memberId, status } = req.body;
-    
-    try {
 
+    const validStatus = ["member", "co-host"];
+    try {
+      const otherUser = await User.findByPk(memberId);
+      if (!validStatus.includes(status)) {
+        const error = new Error("Validation Error");
+        error.status = 400;
+        error.errors = {
+          status: "Invalid Status",
+        };
+        throw error;
+      }
       if (user.id === memberId) {
         const error = new Error("Validation Error");
         error.status = 400;
@@ -259,13 +261,11 @@ router.put(
         throw error;
       }
 
-      const [userMembership] = await group.getGroup_Members({
-        where: {
-          userId: user.id,
-        },
-      });
+      const [userMembership] = user.memberships.filter(
+        (member) => member.groupId === group.id
+      );
 
-      const isUser = await User.findByPk(memberId);
+      const member = otherUser;
 
       if (status === "pending") {
         const error = new Error("Validation Error");
@@ -275,26 +275,12 @@ router.put(
         };
         throw error;
       }
-      if (!isUser) {
+      if (!member) {
         const error = new Error("Validation Error");
         error.status = 404;
         error.errors = {
-          memberId: "User couldn't be found",
+          memberId: "Member couldn't be found in group",
         };
-        throw error;
-      }
-
-      const [member] = await group.getGroup_Members({
-        where: {
-          userId: memberId,
-        },
-      });
-
-      if (!member) {
-        const error = new Error(
-          "Membership between the user and the group does not exist"
-        );
-        error.status = 404;
         throw error;
       }
 
@@ -306,23 +292,14 @@ router.put(
         throw error;
       }
 
-      if (status === "co-host" || status === "member") {
-        const data = await member.update({ userId: memberId, role: status });
+      const data = await member.update({ userId: memberId, role: status });
 
-        res.json({
-          id: data.id,
-          groupId: groupId,
-          memberId: memberId,
-          status: data.role,
-        });
-      }
-
-      const error = new Error("Validation Error");
-      error.status = 400;
-      error.errors = {
-        status: "Attempted to update to invalid status",
-      };
-      throw error;
+      res.json({
+        id: data.id,
+        groupId: +groupId,
+        memberId: memberId,
+        status: data.role,
+      });
     } catch (err) {
       next(err);
     }
@@ -332,62 +309,44 @@ router.put(
 /*           DELETE MEMBERSHIP WITH GROUP ID             */
 router.delete(
   "/:groupId/membership/:userId",
-  [requireAuth, exists, checkAccessTo(Group)],
+  fullCheck("organizer", "co-host", "member", "pending"),
   async (req, res, next) => {
-    const [{ group, user }, { groupId, userId }] = [req, req.params];
+    const [{ group, user, otherUser }, { groupId, userId }] = [req, req.params];
     try {
-
-      
-      const organizer = await group.getOrganizer();
-      
-      console.log(userId,organizer.id,user.id);
-      const [deleteMembership] =await group.getGroup_Members({
-        where:{
-          userId:userId
-        }
-      });
-
-      if (!deleteMembership) {
-        const error = new Error(
-          "Membership between the user and the group does not exist"
-        );
-        error.status = 404;
+      const isAdmin = user.id == group.organizerId;
+      const isSelf = user.id == userId;
+      if (isSelf && isAdmin) {
+        const error = new Error("Validation Error");
+        error.status = 403;
+        error.errors = {
+          status: "Cannot delete your membership to your group",
+        };
         throw error;
       }
-      
-      if (organizer.id == user.id) {
-        
-        console.log('USER IS ORGANIZER')
-        console.log(userId,organizer.id,user.id);
-
-        if (user.id == userId) {
-          console.log("ORGANIZER ATTEMPTING TO DELTE THEMSELVES")
-          const error = new Error("Validation Error");
-          error.status = 400;
-          error.errors = {
-            status: "Cannot delete your membership to your group",
-          };
-          throw error;
-        }
-
-        console.log("ORGANIZER ATTEMPTING TO DESTROY SOMEONE ELSE")
-
-        await deleteMembership.destroy();
-
-        return res.json({
-          "message": "Successfully deleted membership from group"
-        })
+      if (!isAdmin && !isSelf) {
+        const error = new Error("Forbidden");
+        error.status = 403;
+        error.errors = {
+          status: "You do not have permission to delete from this group",
+        };
+        throw error;
       }
 
-      if (user.id == userId) {
+      let [deleteMembership] = await otherUser.getGroup_Members({
+        where: {
+          groupId: groupId,
+        },
+      });
 
-        await deleteMembership.destroy();
+      await Group_Member.destroy({
+        where: {
+          ...deleteMembership.toJSON()
+        },
+      });
 
-        return res.json({
-          "message": "Successfully deleted your membership from group"
-        })
-
-      }
+      return res.json({
+        message: "Successfully deleted membership from group",
+      });
     } catch (err) {
       next(err);
     }

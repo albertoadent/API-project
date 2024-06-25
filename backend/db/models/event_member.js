@@ -21,8 +21,33 @@ module.exports = (sequelize, DataTypes) => {
   }
   Event_Member.init(
     {
-      groupMemberId: { type: DataTypes.INTEGER, allowNull: false },
-      eventId: { type: DataTypes.INTEGER, allowNull: false },
+      groupMemberId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: sequelize.models.Group_Member,
+        },
+      },
+      eventId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: sequelize.models.Event,
+        },
+      },
+      status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "pending",
+        validate: {
+          isValidSatuts(status) {
+            const validStatus = ["attending", "waitlist", "pending"];
+            if (!validStatus.includes(status)) {
+              throw new Error("not a valid status");
+            }
+          },
+        },
+      },
     },
     {
       sequelize,
@@ -32,11 +57,6 @@ module.exports = (sequelize, DataTypes) => {
           const event = await eventMember.getEvent();
           await event.increment("numAttending");
           // console.log(`Incremented numAttending for Event ${event.id}`);
-        },
-        afterDestroy: async (eventMember, options) => {
-          const event = await eventMember.getEvent();
-          await event.decrement("numAttending");
-          // console.log(`Decremented numAttending for Event ${event.id}`);
         },
       },
     }

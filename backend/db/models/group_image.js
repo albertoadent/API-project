@@ -13,8 +13,20 @@ module.exports = (sequelize, DataTypes) => {
   }
   Group_Image.init(
     {
-      imageId: { type: DataTypes.INTEGER, allowNull: false },
-      groupId: { type: DataTypes.INTEGER, allowNull: false },
+      imageId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: sequelize.models.Image,
+        },
+      },
+      groupId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: sequelize.models.Group,
+        },
+      },
     },
     {
       sequelize,

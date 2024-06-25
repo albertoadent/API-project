@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { jwtConfig } = require("../config");
-const { User, Group } = require("../db/models");
+const { User, Group, Group_Member, Sequelize } = require("../db/models");
+const { check } = require("express-validator");
 
 const { secret, expiresIn } = jwtConfig;
 
@@ -68,132 +69,132 @@ const requireAuth = function (req, _res, next) {
   return next(err);
 };
 
-/**
- * Middleware to check user access to a resource.
- *
- * @param {object} Model - The Sequelize model to check access against. (make sure that your Id is formatted {modelname}Id)
- * @param {object} options - Must include at least the foreign key that would allow access to the model (defaults to {modelname}Id)
- * @returns {Function} - The middleware function.
- */
-
-const checkAccessTo =
-  (Model, options = {}, allowedRoles) =>
+const isAuthorizedMember =
+  (allowedRoles = ["organizer"]) =>
   async (req, res, next) => {
-    const { user } = req;
-
-    let id = req.params[`${Model.name.toLowerCase()}Id`]; //This is the instance we are checking access to
-
-    if (!id) return next();
-
-    let modelInstance = await Model.findByPk(id);
-
     try {
-      if (!modelInstance) {
-        const err = new Error(`${Model.name} does not exist at id: ${id}`);
-        err.status = 404;
-        throw err;
+      const { user } = req;
+      const memberships = await user.getGroup_Members({
+        where: {
+          role: { [Sequelize.Op.in]: allowedRoles },
+        },
+      });
+
+      if (memberships && memberships.length > 0) {
+        user.memberships = memberships;
       }
-      req[`${Model.name.toLowerCase()}`] =
-        req[`${Model.name.toLowerCase()}`] || modelInstance;
+      let validGroupIds = memberships.map((membership) => membership.groupId);
 
-      if (options.through) {
-        //this is the instance that has access to the user
+      req.validGroupIds = validGroupIds;
 
-        const throughId =
-          modelInstance[
-            options.through.foreignKey ||
-              `${options.through.model.name.toLowerCase()}Id`
-          ];
+      const idNames = Object.keys(req.params);
 
-        modelInstance = await options.through.model.findByPk(throughId);
+      const extractModelFromKey = (key) => {
+        const modelName = key.replace("Id", "");
+        return require("../db/models")[
+          modelName.charAt(0).toUpperCase() + modelName.slice(1)
+        ];
+      };
+
+      let ModelsIdPairs = idNames.map((key) => [
+        extractModelFromKey(key),
+        req.params[key],
+      ]);
+
+      ModelsIdPairs = ModelsIdPairs.filter(([Model, id]) => {
+        return !(Model === User && user.id == id);
+      });
+
+      const userIsMemberOfModel = async ([Model, modelId]) => {
+        //need a different approach for a User model
+        const modelInstance = await Model.findByPk(modelId);
+
         if (!modelInstance) {
           const err = new Error(
-            `${options.through.model.name} does not exist at id: ${throughId}`
+            `${Model.name} does not exist at id: ${modelId}`
           );
           err.status = 404;
           throw err;
         }
-        req[`${options.through.model.name.toLowerCase()}`]
-          ? req[`${options.through.model.name.toLowerCase()}`]
-          : modelInstance;
-      }
-      const foreignKey =
-        Model === Group || options.through.model === Group
-          ? "organizerId"
-          : "userId";
-      if (modelInstance[foreignKey] != user.id) {
-        const err = new Error(
-          `User does not have access to this ${Model.name}`
-        );
-        err.status = 403;
-        throw err;
-      }
-      if (options.validate) {
-        // options.validate.__extra = ()=>null;
-        const { key, ...validators } = options.validate;
-        // console.log(validators);
-        for (const validation of Object.values(validators)) {
-          // console.log('Function ==>>>>',validation);
-          validation instanceof Promise
-            ? await validation(
-                modelInstance.key ? modelInstance.key : modelInstance,
-                user,
-                allowedRoles
-              )
-            : validation(
-                modelInstance.key ? modelInstance.key : modelInstance,
-                user,
-                allowedRoles
-              );
+
+        if (Model === User) {
+          //get user memberships and filter for the ones that have the required role
+          req.otherUser = modelInstance;
+          
+          const userMemberships = await modelInstance.getGroup_Members({
+            where: {
+              groupId: { [Sequelize.Op.in]: validGroupIds },
+            },
+          });
+          //get other user memberships
+          //if any of the group Ids are the same then you have permission to access them
+          if (userMemberships.length <= 0) {
+            const err = new Error(`You do not have access to this user`);
+            err.status = 403;
+            throw err;
+          }
+
+          if (req.validGroupIds) {
+            req.validGroupIds = req.validGroupIds.filter((id) => {
+              validGroupIds.includes(id);
+            });
+          } else {
+            req.validGroupIds = validGroupIds;
+          }
+          return;
         }
-      }
+        if (Model === Group) {
+          if (!validGroupIds.includes(modelInstance.id)) {
+            const err = new Error(`You do not have access to this group`);
+            err.status = 403;
+            throw err;
+          }
+          return;
+        }
+        if (Model === Group_Member) {
+          if (!validGroupIds.includes(modelInstance.groupId)) {
+            const err = new Error(
+              `You do not have access to this group member`
+            );
+            err.status = 403;
+            throw err;
+          }
+          return;
+        }
+        //Get memberships from user (already defined as memberships)
+        req[Model.name.toLowerCase()] = modelInstance;
+        //Get role of user in the common group
+
+        const group = await modelInstance.getGroup();
+
+        if (!group || !req.validGroupIds.includes(group.id)) {
+          const err = new Error(
+            `You do not have access to ${Model.name} at id: ${modelId}`
+          );
+          err.status = 403;
+          throw err;
+        }
+
+        req.validGroupIds = [group.id];
+      };
+
+      const promises = ModelsIdPairs.map(userIsMemberOfModel);
+
+      await Promise.all(promises);
       next();
     } catch (err) {
       next(err);
     }
   };
 
-const checkAccessGroupMember = async (
-  group,
-  user,
-  allowedRoles = ["co-host", "organizer"]
-) => {
-  const [member] = await group.getGroup_Members({
-    where: {
-      userId: user.id,
-    },
-  });
-  // console.log("Getting Group member... =======>>>", member);
-  if (!allowedRoles.includes(member.role)) {
-    throw new Error("Not organizer or co-host");
-  }
-};
-
-const isGroupAdmin = (
-  allowedRoles = ["co-host", "organizer"],
-  model = Group,
-  throughModel
-) =>
-  checkAccessTo(
-    model,
-    {
-      through: throughModel ? { model: throughModel } : undefined,
-      validate: {
-        checkAccessGroupMember,
-      },
-    },
-    allowedRoles
-  );
-
 const exists = async (req, res, next) => {
   try {
-
-    const promises = Object.keys(req.params).map( async (modelId)=>{
-      let [modelName] = modelId.split("Id");
+    const promises = Object.keys(req.params).map(async (modelId) => {
+      let modelName = modelId.replace("Id",'');
       const capitalizedModelName =
         modelName.charAt(0).toUpperCase() + modelName.slice(1);
       const Model = require(`../db/models`)[capitalizedModelName];
-      console.log(Model);
+      // console.log(Model);
       const modelInstance = await Model.findByPk(req.params[modelId]);
       if (!modelInstance) {
         err = new Error(
@@ -202,15 +203,22 @@ const exists = async (req, res, next) => {
         err.status = 404;
         throw err;
       }
-  
+
       if (!req[modelName]) req[modelName] = modelInstance;
-    })
+      // console.log(req[modelName]);
+    });
     await Promise.all(promises);
     next();
   } catch (err) {
     next(err);
   }
 };
+
+const fullCheck = (...allowedRoles) => [
+  requireAuth,
+  exists,
+  isAuthorizedMember(allowedRoles),
+];
 
 // backend/utils/auth.js
 // ...
@@ -219,7 +227,7 @@ module.exports = {
   setTokenCookie,
   restoreUser,
   requireAuth,
-  checkAccessTo,
   exists,
-  isGroupAdmin,
+  isAuthorizedMember,
+  fullCheck
 };

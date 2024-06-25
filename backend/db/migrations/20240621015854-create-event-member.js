@@ -22,13 +22,18 @@ module.exports = {
           type: Sequelize.INTEGER,
           allowNull: false,
           references: { model: "Group_Members" },
-          onDelete:"CASCADE"
+          onDelete: "CASCADE",
         },
         eventId: {
           type: Sequelize.INTEGER,
           allowNull: false,
           references: { model: "Events" },
-          onDelete:"CASCADE"
+          onDelete: "CASCADE",
+        },
+        status: {
+          type: Sequelize.STRING,
+          allowNull: false,
+          defaultValue: "pending",
         },
         createdAt: {
           allowNull: false,
@@ -43,9 +48,18 @@ module.exports = {
       },
       options
     );
+    options.tableName = "Event_Members";
+    await queryInterface.addIndex(options, ["eventId", "groupMemberId"], {
+      unique: true,
+      name: "idx_group_member_eventId_groupMemberId",
+    });
   },
   async down(queryInterface, Sequelize) {
     options.tableName = "Event_Members";
     await queryInterface.dropTable(options);
+    await queryInterface.removeIndex(
+      options,
+      "idx_group_member_eventId_groupMemberId"
+    );
   },
 };

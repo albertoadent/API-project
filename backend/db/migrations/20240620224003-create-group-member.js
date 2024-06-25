@@ -34,7 +34,7 @@ module.exports = {
         role: {
           type: Sequelize.STRING,
           allowNull: false,
-          defaultValue: "organizer",
+          defaultValue: "pending",
         },
         createdAt: {
           allowNull: false,

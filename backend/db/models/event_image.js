@@ -13,8 +13,20 @@ module.exports = (sequelize, DataTypes) => {
   }
   Event_Image.init(
     {
-      imageId: { type: DataTypes.INTEGER, allowNull: false },
-      eventId: { type: DataTypes.INTEGER, allowNull: false },
+      imageId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: sequelize.models.Image,
+        },
+      },
+      eventId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: sequelize.models.Event,
+        },
+      },
     },
     {
       sequelize,

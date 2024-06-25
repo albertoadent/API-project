@@ -17,19 +17,36 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "groupId",
         onDelete: "CASCADE",
       });
+      Group_Member.hasMany(models.Event_Member, {
+        foreignKey: "groupMemberId",
+        onDelete: "CASCADE",
+        hooks: true,
+      });
     }
   }
   Group_Member.init(
     {
-      userId: { type: DataTypes.INTEGER, allowNull: false },
-      groupId: { type: DataTypes.INTEGER, allowNull: false },
+      userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: sequelize.models.User,
+        },
+      },
+      groupId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: sequelize.models.Group,
+        },
+      },
       role: {
         type: DataTypes.STRING,
         allowNull: false,
-        defaultValue: "organizer",
+        defaultValue: "pending",
         validate: {
           isRole(role) {
-            const validRoles = ["organizer", "co-host", "member","pending"];
+            const validRoles = ["organizer", "co-host", "member", "pending"];
             if (!validRoles.includes(role)) {
               throw new Error("not a valid role for group member");
             }

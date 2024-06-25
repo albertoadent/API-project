@@ -33,6 +33,7 @@ module.exports = (sequelize, DataTypes) => {
       });
     }
 
+  
     static associate(models) {
       //User Relationships
       Group.belongsTo(models.User, {
@@ -75,7 +76,11 @@ module.exports = (sequelize, DataTypes) => {
   }
   Group.init(
     {
-      organizerId: { type: DataTypes.INTEGER, allowNull: false },
+      organizerId: { type: DataTypes.INTEGER, allowNull: false,
+        references:{
+          model:sequelize.models.User
+        }
+       },
       name: {
         type: DataTypes.STRING,
         allowNull: false,

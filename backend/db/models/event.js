@@ -38,7 +38,6 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: "groupMemberId",
         onDelete: "CASCADE",
       });
-
       Event.belongsToMany(models.Image, {
         through: models.Event_Image,
         foreignKey: "eventId",
@@ -54,6 +53,9 @@ module.exports = (sequelize, DataTypes) => {
         validate: {
           isValidId: validateValidId("Group"),
         },
+        references: {
+          model: sequelize.models.Group,
+        },
       },
       venueId: {
         type: DataTypes.INTEGER,
@@ -61,6 +63,9 @@ module.exports = (sequelize, DataTypes) => {
         validate: {
           isValidId: validateValidId("Venue"),
         },
+        references:{
+          model:sequelize.models.Venue
+        }
       },
       name: {
         type: DataTypes.STRING,

@@ -11,6 +11,7 @@ const {
   checkAccessTo,
   exists,
   isGroupAdmin,
+  isAuthorizedMember
 } = require("../../utils/auth");
 
 // router.use(requireAuth);
@@ -21,7 +22,7 @@ router.put(
   [
     requireAuth,
     exists,
-    isGroupAdmin(['owner','co-host'],Venue,Group),
+    isAuthorizedMember(['organizer','co-host']),
   ],
   async (req, res, next) => {
     const { user, venue } = req;

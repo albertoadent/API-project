@@ -43,6 +43,28 @@ module.exports = {
           numMembers: 1,
           previewImage: "null",
         },
+        {
+          organizerId: 3,
+          name: "Third Group",
+          about: "this group is a group about a group that does the group",
+          type: "In person",
+          private: true,
+          city: "Atlanta",
+          state: "GA",
+          numMembers: 1,
+          previewImage: "null",
+        },
+        {
+          organizerId: 4,
+          name: "Fourth Group",
+          about: "this group is a group about a group that does the group",
+          type: "In person",
+          private: true,
+          city: "Atlanta",
+          state: "GA",
+          numMembers: 1,
+          previewImage: "null",
+        },
       ],
       { validate: true }
     );
@@ -54,7 +76,14 @@ module.exports = {
     return queryInterface.bulkDelete(
       options,
       {
-        W: { [Op.in]: ["First Group", "Second Group"] },
+        name: {
+          [Op.in]: [
+            "First Group",
+            "Second Group",
+            "Third Group",
+            "Fourth Group",
+          ],
+        },
       },
       {}
     );

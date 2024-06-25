@@ -37,6 +37,30 @@ module.exports = {
           lat: 1.23,
           lng: 23.56,
         },
+        {
+          groupId: 2,
+          address: "1234 Passion Lane",
+          city: "Atlanta",
+          state: "GA",
+          lat: 1.23,
+          lng: 23.56,
+        },
+        {
+          groupId: 1,
+          address: "12345 Passion Lane",
+          city: "Atlanta",
+          state: "GA",
+          lat: 1.23,
+          lng: 23.56,
+        },
+        {
+          groupId: 3,
+          address: "123456 Passion Lane",
+          city: "Atlanta",
+          state: "GA",
+          lat: 1.23,
+          lng: 23.56,
+        },
       ],
       { validate: true }
     );
@@ -54,7 +78,7 @@ module.exports = {
     return queryInterface.bulkDelete(
       options,
       {
-        id: { [Op.in]: [1, 2] },
+        id: { [Op.in]: [1, 2,3,4,5] },
       },
       {}
     );

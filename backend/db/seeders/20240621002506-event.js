@@ -42,6 +42,28 @@ module.exports = {
       price: 10.0,
       previewImage: null,
     });
+    await Event.create({
+      groupId: 2,
+      venueId: 3,
+      name: "this place",
+      type: "In person",
+      startDate: "2025-11-19 20:00:00",
+      endDate: "2025-11-19 22:00:00",
+      capacity: 15,
+      price: 10.0,
+      previewImage: null,
+    });
+    await Event.create({
+      groupId: 1,
+      venueId: 4,
+      name: "this place",
+      type: "In person",
+      startDate: "2025-11-19 20:00:00",
+      endDate: "2025-11-19 22:00:00",
+      capacity: 15,
+      price: 10.0,
+      previewImage: null,
+    });
   },
 
   async down(queryInterface, Sequelize) {
@@ -56,7 +78,7 @@ module.exports = {
     return queryInterface.bulkDelete(
       options,
       {
-        id: { [Op.in]: [1, 2] },
+        id: { [Op.in]: [1, 2,3,4] },
       },
       {}
     );
