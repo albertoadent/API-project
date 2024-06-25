@@ -8,10 +8,9 @@ const {
   setTokenCookie,
   restoreUser,
   requireAuth,
-  checkAccessTo,
   exists,
-  isGroupAdmin,
-  isAuthorizedMember
+  isAuthorizedMember,
+  fullCheck
 } = require("../../utils/auth");
 
 // router.use(requireAuth);
@@ -19,11 +18,7 @@ const {
 /*           EDIT VENUE WITH VENUE ID             */
 router.put(
   "/:venueId",
-  [
-    requireAuth,
-    exists,
-    isAuthorizedMember(['organizer','co-host']),
-  ],
+  fullCheck(['organizer','co-host']),
   async (req, res, next) => {
     const { user, venue } = req;
     try {

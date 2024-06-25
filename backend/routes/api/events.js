@@ -88,17 +88,13 @@ router.put("/:eventId", fullCheck(), async (req, res, next) => {
 });
 router.delete(
   "/:eventId",
-  fullCheck("organizer", "co-host"),
+  fullCheck(["organizer", "co-host"]),
   async (req, res, next) => {
     const { event } = req;
     try {
       console.log("we made it");
       // await event.destroy();
-      await Event.destroy({
-        where: {
-          id: event.id,
-        },
-      });
+      await event.destroy();
       res.json({ message: "Successfully deleted" });
     } catch (err) {
       next(err);
@@ -136,7 +132,10 @@ router.get("/:eventId/attendees", exists, async (req, res, next) => {
       },
     });
     const flatten = users.map((user) => {
-      return { ...user.toJSON().User, ...user.toJSON().Event_Members[0] };
+      return {
+        ...user.toJSON().User,
+        Attendance: { ...user.toJSON().Event_Members[0] },
+      };
     });
     return res.json({ Attendees: flatten });
   } catch (err) {
@@ -146,7 +145,7 @@ router.get("/:eventId/attendees", exists, async (req, res, next) => {
 
 router.post(
   "/:eventId/attendance",
-  fullCheck("organizer", "co-host", "member"),
+  fullCheck(["organizer", "co-host", "member"]),
   async (req, res, next) => {
     const { event, user } = req;
     const [validMembership] = user.memberships.filter(
@@ -161,9 +160,9 @@ router.post(
       if (alreadyDid) {
         const err = new Error("Validation Error");
         err.status = 400;
-        err.title = "Validation Error"
+        err.title = "Validation Error";
         err.message =
-        alreadyDid.toJSON().status == "pending"
+          alreadyDid.toJSON().status == "pending"
             ? "Attendance has already been requested"
             : "User is already an attendee of the event";
         throw err;
@@ -174,6 +173,53 @@ router.post(
       res.json(data);
     } catch (err) {
       next(err);
+    }
+  }
+);
+
+router.delete(
+  "/:eventId/attendance/:userId",
+  fullCheck(["organizer", "co-host", "member", "pending"]),
+  async (req, res, next) => {
+    try {
+      const { event, user, otherUser } = req;
+      // otherUser.memberships = await otherUser.getGroup_Members();
+      // console.log(otherUser.memberships);
+      const otherUserMemberIds = otherUser.memberships.map(
+        (membership) => {
+          return membership.toJSON().id
+        }
+      );
+      // console.log(otherUserMemberIds);
+      const [attendance] = await event.getEvent_Members({
+        where: {
+          groupMemberId:{[Sequelize.Op.in]:otherUserMemberIds}
+        },
+      });
+      // console.log(attendance);
+      const isSelf = user.id === otherUser.id;
+      const group = await event.getGroup();
+      const isAdmin = group.organizerId === user.id;
+
+      if ((isSelf && isAdmin) || (!isSelf && !isAdmin)) {
+        return res.status(404).json({
+          message: "Only the User or organizer may delete an Attendance",
+        });
+      }
+
+      if (!attendance) {
+        return res.status(403).json({
+          message: "Attendance does not exist for this User",
+        });
+      }
+
+      await attendance.destroy();
+
+      return res.json({
+        message: "Successfully deleted attendance from event",
+      });
+    } catch (error) {
+      next(error);
     }
   }
 );

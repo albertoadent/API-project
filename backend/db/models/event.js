@@ -12,13 +12,11 @@ module.exports = (sequelize, DataTypes) => {
       //relationships to Group
       Event.belongsTo(models.Group, {
         foreignKey: "groupId",
-        onDelete: "CASCADE",
       });
 
       //relationships to Venue
       Event.belongsTo(models.Venue, {
         foreignKey: "venueId",
-        onDelete: "CASCADE",
       });
 
       //relationships to join tables

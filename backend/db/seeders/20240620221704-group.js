@@ -30,7 +30,6 @@ module.exports = {
           city: "Atlanta",
           state: "GA",
           numMembers: 1,
-          previewImage: "null",
         },
         {
           organizerId: 2,
@@ -41,7 +40,6 @@ module.exports = {
           city: "Atlanta",
           state: "GA",
           numMembers: 1,
-          previewImage: "null",
         },
         {
           organizerId: 3,
@@ -52,7 +50,6 @@ module.exports = {
           city: "Atlanta",
           state: "GA",
           numMembers: 1,
-          previewImage: "null",
         },
         {
           organizerId: 4,
@@ -63,7 +60,6 @@ module.exports = {
           city: "Atlanta",
           state: "GA",
           numMembers: 1,
-          previewImage: "null",
         },
       ],
       { validate: true }

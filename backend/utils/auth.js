@@ -1,6 +1,13 @@
 const jwt = require("jsonwebtoken");
 const { jwtConfig } = require("../config");
-const { User, Group, Group_Member, Sequelize } = require("../db/models");
+const {
+  User,
+  Group,
+  Group_Member,
+  Sequelize,
+  Event,
+  Event_Member,
+} = require("../db/models");
 const { check } = require("express-validator");
 
 const { secret, expiresIn } = jwtConfig;
@@ -70,22 +77,51 @@ const requireAuth = function (req, _res, next) {
 };
 
 const isAuthorizedMember =
-  (allowedRoles = ["organizer"]) =>
+  (allowedRoles = ["organizer"], CheckModel) =>
   async (req, res, next) => {
     try {
       const { user } = req;
+      // console.log(allowedRoles);
+
       const memberships = await user.getGroup_Members({
+        attributes: ["id", "groupId", "userId"],
         where: {
           role: { [Sequelize.Op.in]: allowedRoles },
         },
       });
 
-      if (memberships && memberships.length > 0) {
-        user.memberships = memberships;
-      }
+      // console.log(memberships);
+      user.memberships = memberships;
+
       let validGroupIds = memberships.map((membership) => membership.groupId);
 
+      const attendances = await Promise.all(
+        memberships.flatMap(async (member) => {
+          const attendances = await member.getEvent_Members({
+            attributes: ["id", "groupMemberId", "eventId"],
+            where: {
+              groupMemberId: {
+                [Sequelize.Op.in]: validGroupIds,
+              },
+            },
+          });
+
+          return attendances.map((attend) => attend);
+        })
+      );
+
+      user.attendances = attendances.flatMap((attendace) =>
+        attendace.map((ele) => ele)
+      );
+      let validEventIds = attendances.flatMap((attendace) =>
+        attendace.map((ele) => ele.eventId)
+      );
+
+      // console.log("attendances",user.attendances)
+      // console.log("validEventIds",validEventIds)
+
       req.validGroupIds = validGroupIds;
+      req.validEventIds = validEventIds;
 
       const idNames = Object.keys(req.params);
 
@@ -120,15 +156,39 @@ const isAuthorizedMember =
         if (Model === User) {
           //get user memberships and filter for the ones that have the required role
           req.otherUser = modelInstance;
-          
+
           const userMemberships = await modelInstance.getGroup_Members({
+            attributes: ["id", "groupId", "userId"],
             where: {
               groupId: { [Sequelize.Op.in]: validGroupIds },
             },
           });
+
+          const userAttendances = await Promise.all(
+            userMemberships.map(
+              async (member) =>
+                await member.getEvent_Members({
+                  attributes: ["id", "groupMemberId", "eventId"],
+                  where: {
+                    groupMemberId: {
+                      [Sequelize.Op.in]: validGroupIds,
+                    },
+                  },
+                })
+            )
+          );
+
+          req.otherUser.memberships = userMemberships;
+          req.otherUser.attendances = userAttendances.flatMap((attendace) =>
+            attendace.map((ele) => ele)
+          );
           //get other user memberships
           //if any of the group Ids are the same then you have permission to access them
-          if (userMemberships.length <= 0) {
+
+          if (
+            (CheckModel === Group && userMemberships.length <= 0) ||
+            (CheckModel === Event && userAttendances.length <= 0)
+          ) {
             const err = new Error(`You do not have access to this user`);
             err.status = 403;
             throw err;
@@ -141,20 +201,39 @@ const isAuthorizedMember =
           } else {
             req.validGroupIds = validGroupIds;
           }
+          if (req.validEventIds) {
+            req.validEventIds = req.validEventIds.filter((id) => {
+              validEventIds.includes(id);
+            });
+          } else {
+            req.validEventIds = validEventIds;
+          }
           return;
         }
-        if (Model === Group) {
+        if (Model === CheckModel) {
           if (!validGroupIds.includes(modelInstance.id)) {
-            const err = new Error(`You do not have access to this group`);
+            const err = new Error(
+              `You do not have access to this ${CheckModel.name.toLowerCase()}`
+            );
             err.status = 403;
             throw err;
           }
           return;
         }
-        if (Model === Group_Member) {
+        if (Model === Group_Member && CheckModel === Group) {
           if (!validGroupIds.includes(modelInstance.groupId)) {
             const err = new Error(
               `You do not have access to this group member`
+            );
+            err.status = 403;
+            throw err;
+          }
+          return;
+        }
+        if (Model === Event_Member && CheckModel === Event) {
+          if (!validGroupIds.includes(modelInstance.groupId)) {
+            const err = new Error(
+              `You do not have access to this event member`
             );
             err.status = 403;
             throw err;
@@ -165,17 +244,55 @@ const isAuthorizedMember =
         req[Model.name.toLowerCase()] = modelInstance;
         //Get role of user in the common group
 
-        const group = await modelInstance.getGroup();
+        let group;
+        let event;
+        // console.log(validGroupIds);
 
-        if (!group || !req.validGroupIds.includes(group.id)) {
-          const err = new Error(
-            `You do not have access to ${Model.name} at id: ${modelId}`
-          );
-          err.status = 403;
-          throw err;
+        try {
+          group = await modelInstance.getGroup();
+        } catch {
+          [group] = await modelInstance.getGroups({
+            where: {
+              id: { [Sequelize.Op.in]: validGroupIds },
+            },
+          });
         }
 
-        req.validGroupIds = [group.id];
+        try {
+          event = await modelInstance.getEvent();
+        } catch {
+          [event] = await modelInstance.getEvents({
+            where: {
+              id: { [Sequelize.Op.in]: validEventIds },
+            },
+          });
+        }
+        if (CheckModel === Group) {
+          console.log(group, req.validGroupIds);
+          if (!group || !req.validGroupIds.includes(group.id)) {
+            const err = new Error(
+              `You do not have access to ${Model.name} at id: ${modelId}`
+            );
+            err.status = 403;
+            throw err;
+          }
+
+          req.validGroupIds = [group.id];
+          req.group = group;
+        }
+        if (CheckModel === Event) {
+          console.log(event, req.validEventIds);
+          if (!event || !validEventIds.includes(event.id)) {
+            const err = new Error(
+              `You do not have access to ${Model.name} at id: ${modelId}`
+            );
+            err.status = 403;
+            throw err;
+          }
+
+          req.valideventIds = [event.id];
+          req.event = event;
+        }
       };
 
       const promises = ModelsIdPairs.map(userIsMemberOfModel);
@@ -190,7 +307,7 @@ const isAuthorizedMember =
 const exists = async (req, res, next) => {
   try {
     const promises = Object.keys(req.params).map(async (modelId) => {
-      let modelName = modelId.replace("Id",'');
+      let modelName = modelId.replace("Id", "");
       const capitalizedModelName =
         modelName.charAt(0).toUpperCase() + modelName.slice(1);
       const Model = require(`../db/models`)[capitalizedModelName];
@@ -214,10 +331,10 @@ const exists = async (req, res, next) => {
   }
 };
 
-const fullCheck = (...allowedRoles) => [
+const fullCheck = (allowedRoles = ["organizer"], Model = Group) => [
   requireAuth,
   exists,
-  isAuthorizedMember(allowedRoles),
+  isAuthorizedMember(allowedRoles, Model),
 ];
 
 // backend/utils/auth.js
@@ -229,5 +346,5 @@ module.exports = {
   requireAuth,
   exists,
   isAuthorizedMember,
-  fullCheck
+  fullCheck,
 };

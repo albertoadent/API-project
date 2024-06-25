@@ -38,7 +38,6 @@ module.exports = (sequelize, DataTypes) => {
       //User Relationships
       Group.belongsTo(models.User, {
         foreignKey: "organizerId",
-        onDelete: "CASCADE",
       });
       Group.belongsToMany(models.User, {
         through: models.Group_Member,
@@ -149,7 +148,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 1,
       },
-      previewImage: { type: DataTypes.STRING, allowNull: true },
     },
     {
       sequelize,

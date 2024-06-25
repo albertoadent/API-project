@@ -11,11 +11,9 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Group_Member.belongsTo(models.User, {
         foreignKey: "userId",
-        onDelete: "CASCADE",
       });
       Group_Member.belongsTo(models.Group, {
         foreignKey: "groupId",
-        onDelete: "CASCADE",
       });
       Group_Member.hasMany(models.Event_Member, {
         foreignKey: "groupMemberId",
@@ -57,6 +55,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Group_Member",
+      defaultScope: ["userId", "groupId", "role", "id"],
     }
   );
   return Group_Member;

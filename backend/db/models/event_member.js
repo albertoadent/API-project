@@ -10,12 +10,9 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Event_Member.belongsTo(models.Event, {
         foreignKey: "eventId",
-        onDelete: "CASCADE",
-        hooks: true,
       });
       Event_Member.belongsTo(models.Group_Member, {
         foreignKey: "groupMemberId",
-        onDelete: "CASCADE",
       });
     }
   }
@@ -52,6 +49,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Event_Member",
+      defaultScope: ["groupMemberId", "eventId", "status", "id"],
       hooks: {
         afterCreate: async (eventMember, options) => {
           const event = await eventMember.getEvent();

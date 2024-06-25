@@ -74,12 +74,16 @@ const usersRouter = require("./users");
 const groupsRouter = require("./groups");
 const venuesRouter = require("./venues");
 const eventsRouter = require("./events");
+const eventImageRouter = require("./event-images");
+const groupImageRouter = require("./group-images");
 
 router.use("/session", sessionRouter);
 router.use("/users", usersRouter);
 router.use("/groups", groupsRouter);
 router.use("/venues", venuesRouter);
 router.use("/events", eventsRouter);
+router.use("/event-images", eventImageRouter);
+router.use("/group-images", groupImageRouter);
 
 // router.use(requireAuth);
 

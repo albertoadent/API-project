@@ -109,7 +109,7 @@ router.delete("/:groupId", fullCheck(), async (req, res, next) => {
 /*           GET VENUES WITH GROUP ID             */
 router.get(
   "/:groupId/venues",
-  fullCheck("organizer", "co-host"),
+  fullCheck(["organizer", "co-host"]),
   async (req, res, next) => {
     const { user, group } = req;
     const venues = await group.getVenues();
@@ -236,7 +236,7 @@ router.post(
 /*           CHANGE MEMBERSHIP STATUS WITH GROUP ID             */
 router.put(
   "/:groupId/membership",
-  fullCheck("organizer", "co-host"),
+  fullCheck(["organizer", "co-host"]),
   async (req, res, next) => {
     const [{ group, user }, { groupId }] = [req, req.params];
     const { memberId, status } = req.body;
@@ -309,7 +309,7 @@ router.put(
 /*           DELETE MEMBERSHIP WITH GROUP ID             */
 router.delete(
   "/:groupId/membership/:userId",
-  fullCheck("organizer", "co-host", "member", "pending"),
+  fullCheck(["organizer", "co-host", "member", "pending"]),
   async (req, res, next) => {
     const [{ group, user, otherUser }, { groupId, userId }] = [req, req.params];
     try {
@@ -338,11 +338,7 @@ router.delete(
         },
       });
 
-      await Group_Member.destroy({
-        where: {
-          ...deleteMembership.toJSON()
-        },
-      });
+      await deleteMembership.destroy()
 
       return res.json({
         message: "Successfully deleted membership from group",
