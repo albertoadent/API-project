@@ -13,7 +13,7 @@ const validateSignup = [
   check("email")
     .exists({ checkFalsy: true })
     .isEmail()
-    .withMessage("Please provide a valid email."),
+    .withMessage("Invalid email"),
   check("username")
     .exists({ checkFalsy: true })
     .isLength({ min: 4 })
@@ -25,10 +25,10 @@ const validateSignup = [
     .withMessage("Password must be 6 characters or more."),
   check("firstName")
     .exists({ checkFalsy: true })
-    .withMessage("Please provide a valid first name"),
+    .withMessage("First Name is required"),
   check("lastName")
     .exists({ checkFalsy: true })
-    .withMessage("Please provide a valid last name"),
+    .withMessage("Last Name is required"),
   handleValidationErrors,
 ];
 
@@ -54,11 +54,16 @@ router.post("/", validateSignup, async (req, res, next) => {
 
     await setTokenCookie(res, safeUser);
 
-    return res.json({
+    return res.status(201).json({
       user: safeUser,
     });
   } catch (err) {
-    err.status = 400;
+    if (err.name === "SequelizeUniqueConstraintError") {
+      err.errors.forEach((error) => {
+        error.message = `User with that ${error.path} already exists`;
+      });
+    }
+    err.message = "User already exists";
     next(err);
   }
 });

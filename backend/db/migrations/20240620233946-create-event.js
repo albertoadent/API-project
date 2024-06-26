@@ -26,11 +26,12 @@ module.exports = {
         },
         venueId: {
           type: Sequelize.INTEGER,
-          allowNull: false,
+          allowNull: true,
+          defaultValue: null,
           references: {
             model: "Venues",
           },
-          onDelete: "CASCADE",
+          onDelete: "SET NULL",
         },
         name: {
           type: Sequelize.STRING,
@@ -58,19 +59,14 @@ module.exports = {
           allowNull: false,
           defaultValue: 1,
         },
-        price:{
+        price: {
           type: Sequelize.DECIMAL,
-          allowNull:false
+          allowNull: false,
         },
         numAttending: {
           type: Sequelize.INTEGER,
           defaultValue: 0,
           allowNull: false,
-        },
-        previewImage: {
-          type: Sequelize.STRING,
-          allowNull: true,
-          defaultValue: null,
         },
         createdAt: {
           allowNull: false,

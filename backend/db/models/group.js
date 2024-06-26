@@ -15,8 +15,8 @@ module.exports = (sequelize, DataTypes) => {
         },
       });
     }
-    async getOrganizer() {
-      return sequelize.models.User.findByPk(this.organizerId);
+    async getOrganizer(options) {
+      return sequelize.models.User.findByPk(this.organizerId, options);
     }
     async getCoHosts() {
       return this.getGroup_Members({
@@ -33,7 +33,6 @@ module.exports = (sequelize, DataTypes) => {
       });
     }
 
-  
     static associate(models) {
       //User Relationships
       Group.belongsTo(models.User, {
@@ -75,18 +74,20 @@ module.exports = (sequelize, DataTypes) => {
   }
   Group.init(
     {
-      organizerId: { type: DataTypes.INTEGER, allowNull: false,
-        references:{
-          model:sequelize.models.User
-        }
-       },
+      organizerId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: sequelize.models.User,
+        },
+      },
       name: {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
           len: {
             args: [1, 60],
-            msg: "Name must be 60 charactters or less",
+            msg: "Name must be 60 characters or less",
           },
         },
       },
@@ -152,6 +153,27 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Group",
+      hooks: {
+        async afterCreate(group, options) {
+          await sequelize.models.Group_Member.create({
+            groupId: group.id,
+            userId: group.organizerId,
+            role: "organizer",
+          });
+        },
+        async beforeCreate(group, options) {
+          if (group.previewImage && typeof group.previewImage === 'string') {
+            const image = await sequelize.models.Image.create({
+              url: group.previewImage,
+              preview: true,
+            });
+            await sequelize.models.Group_Image.create({
+              imageId: image.id,
+              groupId: group.id,
+            });
+          }
+        },
+      },
     }
   );
   return Group;

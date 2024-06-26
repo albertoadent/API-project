@@ -17,10 +17,18 @@ const validateLogin = [
   check("credential")
     .exists({ checkFalsy: true })
     .notEmpty()
-    .withMessage("Please provide a valid email or username."),
+    .withMessage("Email is required"),
+  check("email")
+  .optional()
+    .isEmail()
+    .withMessage("Please provide a valid email."),
+  check("username")
+    .optional()
+    .notEmpty()
+    .withMessage("Please provide a valid username."),
   check("password")
     .exists({ checkFalsy: true })
-    .withMessage("Please provide a password."),
+    .withMessage("Password is required"),
   handleValidationErrors,
 ];
 
@@ -29,7 +37,7 @@ const router = express.Router();
 router.post("/", validateLogin, async (req, res, next) => {
   const { username, password, email, credential } = req.body;
   try {
-    if (!((username || email) && password))
+    if (!((username || email) && password)&&!credential)
       throw new Error("insufficient credentials given");
     const user = await User.unscoped().findOne({
       where: {
@@ -37,7 +45,7 @@ router.post("/", validateLogin, async (req, res, next) => {
       },
     });
 
-    const error = new Error("Login failed");
+    const error = new Error("Invalid credentials");
     error.status = 401;
     error.title = "Login failed";
 
@@ -62,6 +70,9 @@ router.post("/", validateLogin, async (req, res, next) => {
 
     return res.json({ user: safeUser });
   } catch (err) {
+    if(err.status === 401){
+      return res.status(401).json({message:err.message})
+    }
     next(err);
   }
 });

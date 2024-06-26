@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
       //relationships to Venue
       Event.belongsTo(models.Venue, {
         foreignKey: "venueId",
+        onDelete: "SET NULL",
       });
 
       //relationships to join tables
@@ -57,13 +58,14 @@ module.exports = (sequelize, DataTypes) => {
       },
       venueId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
+        defaultValue: null,
         validate: {
           isValidId: validateValidId("Venue"),
         },
-        references:{
-          model:sequelize.models.Venue
-        }
+        references: {
+          model: sequelize.models.Venue,
+        },
       },
       name: {
         type: DataTypes.STRING,
@@ -111,7 +113,7 @@ module.exports = (sequelize, DataTypes) => {
             if (new Date(value) <= new Date()) {
               throw new Error("Start date must be in the future");
             }
-          }
+          },
         },
       },
       endDate: {
@@ -161,7 +163,6 @@ module.exports = (sequelize, DataTypes) => {
           min: 0,
         },
       },
-      previewImage: { type: DataTypes.STRING, allowNull: true },
     },
     {
       sequelize,
@@ -172,6 +173,25 @@ module.exports = (sequelize, DataTypes) => {
       scopes: {
         default: {
           attributes: { exclude: ["createdAt", "updatedAt", "capacity"] },
+        },
+      },
+      hooks: {
+        beforeCreate(event, options) {
+          if(!event.venueId){
+            event.venueId = null;
+          }
+        },
+        async afterCreate(event, options) {
+          if (options.previewImage && typeof options.previewImage === "string") {
+            const image = await sequelize.models.Image.create({
+              url: options.previewImage,
+              preview: true,
+            });
+            await sequelize.models.Event_Image.create({
+              imageId: image.id,
+              eventId: event.id,
+            });
+          }
         },
       },
     }

@@ -73,6 +73,9 @@ const requireAuth = function (req, _res, next) {
   err.title = "Authentication required";
   err.errors = { message: "Authentication required" };
   err.status = 401;
+  return _res.status(err.status).json({
+    message: "Authentication required",
+  });
   return next(err);
 };
 
@@ -84,7 +87,7 @@ const isAuthorizedMember =
       // console.log(allowedRoles);
 
       const memberships = await user.getGroup_Members({
-        attributes: ["id", "groupId", "userId"],
+        attributes: ["id", "groupId", "userId","role"],
         where: {
           role: { [Sequelize.Op.in]: allowedRoles },
         },
@@ -113,6 +116,7 @@ const isAuthorizedMember =
       user.attendances = attendances.flatMap((attendace) =>
         attendace.map((ele) => ele)
       );
+      // console.log(user.attendances);
       let validEventIds = attendances.flatMap((attendace) =>
         attendace.map((ele) => ele.eventId)
       );
@@ -123,6 +127,7 @@ const isAuthorizedMember =
       req.validGroupIds = validGroupIds;
       req.validEventIds = validEventIds;
 
+      // console.log(req.params);
       const idNames = Object.keys(req.params);
 
       const extractModelFromKey = (key) => {
@@ -137,9 +142,9 @@ const isAuthorizedMember =
         req.params[key],
       ]);
 
-      ModelsIdPairs = ModelsIdPairs.filter(([Model, id]) => {
-        return !(Model === User && user.id == id);
-      });
+      // ModelsIdPairs = ModelsIdPairs.filter(([Model, id]) => {
+      //   return !(Model === User && user.id == id);
+      // });
 
       const userIsMemberOfModel = async ([Model, modelId]) => {
         //need a different approach for a User model
@@ -182,6 +187,7 @@ const isAuthorizedMember =
           req.otherUser.attendances = userAttendances.flatMap((attendace) =>
             attendace.map((ele) => ele)
           );
+          // console.log('THIS IS IT =>>>>',req.otherUser.attendances);
           //get other user memberships
           //if any of the group Ids are the same then you have permission to access them
 
@@ -190,7 +196,7 @@ const isAuthorizedMember =
             (CheckModel === Event && userAttendances.length <= 0)
           ) {
             const err = new Error(`You do not have access to this user`);
-            err.status = 403;
+            err.status = 404;
             throw err;
           }
 
@@ -259,7 +265,8 @@ const isAuthorizedMember =
         }
 
         try {
-          event = await modelInstance.getEvent();
+          event =
+            Model === Event ? modelInstance : await modelInstance.getEvent();
         } catch {
           [event] = await modelInstance.getEvents({
             where: {
@@ -268,7 +275,6 @@ const isAuthorizedMember =
           });
         }
         if (CheckModel === Group) {
-          console.log(group, req.validGroupIds);
           if (!group || !req.validGroupIds.includes(group.id)) {
             const err = new Error(
               `You do not have access to ${Model.name} at id: ${modelId}`
@@ -281,7 +287,6 @@ const isAuthorizedMember =
           req.group = group;
         }
         if (CheckModel === Event) {
-          console.log(event, req.validEventIds);
           if (!event || !validEventIds.includes(event.id)) {
             const err = new Error(
               `You do not have access to ${Model.name} at id: ${modelId}`
@@ -300,11 +305,14 @@ const isAuthorizedMember =
       await Promise.all(promises);
       next();
     } catch (err) {
+      if (err.status === 403) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
       next(err);
     }
   };
 
-const exists = async (req, res, next) => {
+const exists = (messageModel) => async (req, res, next) => {
   try {
     const promises = Object.keys(req.params).map(async (modelId) => {
       let modelName = modelId.replace("Id", "");
@@ -315,7 +323,9 @@ const exists = async (req, res, next) => {
       const modelInstance = await Model.findByPk(req.params[modelId]);
       if (!modelInstance) {
         err = new Error(
-          `${capitalizedModelName} ${req.params[modelId]} does not exist`
+          `${
+            messageModel ? messageModel.name : capitalizedModelName
+          } couldn't be found`
         );
         err.status = 404;
         throw err;
@@ -331,9 +341,13 @@ const exists = async (req, res, next) => {
   }
 };
 
-const fullCheck = (allowedRoles = ["organizer"], Model = Group) => [
+const fullCheck = (
+  allowedRoles = ["organizer"],
+  Model = Group,
+  existsMessageModel
+) => [
   requireAuth,
-  exists,
+  exists(existsMessageModel),
   isAuthorizedMember(allowedRoles, Model),
 ];
 
