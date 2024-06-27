@@ -102,11 +102,6 @@ const isAuthorizedMember =
         memberships.flatMap(async (member) => {
           const attendances = await member.getEvent_Members({
             attributes: ["id", "groupMemberId", "eventId"],
-            where: {
-              groupMemberId: {
-                [Sequelize.Op.in]: validGroupIds,
-              },
-            },
           });
 
           return attendances.map((attend) => attend);
@@ -174,11 +169,6 @@ const isAuthorizedMember =
               async (member) =>
                 await member.getEvent_Members({
                   attributes: ["id", "groupMemberId", "eventId"],
-                  where: {
-                    groupMemberId: {
-                      [Sequelize.Op.in]: validGroupIds,
-                    },
-                  },
                 })
             )
           );

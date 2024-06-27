@@ -245,7 +245,7 @@ const venueValidate = [
 /*           CREATE VENUE WITH GROUP ID             */
 router.post(
   "/:groupId/venues",
-  [...venueValidate, ...fullCheck(["organizer", "co-host"])],
+  [ ...fullCheck(["organizer", "co-host"],...venueValidate)],
   async (req, res, next) => {
     const { user, group } = req;
     try {
@@ -350,7 +350,7 @@ const eventValidation = [
 
 router.post(
   "/:groupId/events",
-  [...eventValidation, ...fullCheck(["organizer", "co-host"])],
+  [...fullCheck(["organizer", "co-host"],...eventValidation)],
   async (req, res, next) => {
     const [{ group }, { groupId }, { previewImage }] = [
       req,

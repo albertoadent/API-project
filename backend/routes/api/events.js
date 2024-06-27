@@ -204,7 +204,7 @@ const eventValidation = [
 
 router.put(
   "/:eventId",
-  [eventValidation, ...fullCheck(['organizer','co-host'])],
+  [...fullCheck(['organizer','co-host'],eventValidation)],
   async (req, res, next) => {
     const { event } = req;
     try {
@@ -340,7 +340,7 @@ router.put(
 
       if (!attendance) {
         const err = new Error("Validation Error");
-        err.status = 400;
+        err.status = 404;
         err.title = "Validation Error";
         err.message = "Attendance between the user and the event does not exist";
         throw err;

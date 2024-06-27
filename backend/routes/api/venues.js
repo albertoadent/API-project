@@ -65,7 +65,7 @@ const validate = [
 /*           EDIT VENUE WITH VENUE ID             */
 router.put(
   "/:venueId",
-  [...validate,...fullCheck(['organizer','co-host'])],
+  [...fullCheck(['organizer','co-host'],...validate)],
   async (req, res, next) => {
     const { user, venue } = req;
     try {
