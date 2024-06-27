@@ -535,7 +535,7 @@ router.put(
         status: data.role,
       });
     } catch (err) {
-      if (err.errors.status) {
+      if (err.errors && err.errors.status) {
         err.errors.status = "Cannot change a membership status to " + status;
       }
       next(err);
