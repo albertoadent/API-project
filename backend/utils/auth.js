@@ -321,6 +321,7 @@ const exists = (messageModel) => async (req, res, next) => {
       const Model = require(`../db/models`)[capitalizedModelName];
       // console.log(Model);
       const modelInstance = await Model.findByPk(req.params[modelId]);
+      console.log('modelInstance')
       if (!modelInstance) {
         err = new Error(
           `${

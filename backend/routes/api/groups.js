@@ -27,7 +27,6 @@ const {
   handleValidationErrors,
   validateValidId,
 } = require("../../utils/validation");
-const { where } = require("sequelize");
 
 /*           GET ALL GROUPS               */
 router.get("/", async (req, res) => {
@@ -83,15 +82,17 @@ router.get("/current", [requireAuth], async (req, res) => {
 });
 
 /*           GET GROUP BY ID               */
-router.get("/:groupId", [exists], async (req, res) => {
+router.get("/:groupId", [exists()], async (req, res) => {
   const group = await Group.findByPk(req.params.groupId, {
     attributes: { exclude: ["previewImage"] },
   });
+  console.log(group.toJSON())
 
   const GroupImages = await group.getImages({
     attributes: ["id", "url", "preview"],
     joinTableAttributes: [],
   });
+
 
   const Organizer = await group.getOrganizer({
     attributes: ["id", "firstName", "lastName"],
@@ -100,6 +101,7 @@ router.get("/:groupId", [exists], async (req, res) => {
   const Venues = await group.getVenues({
     attributes: { exclude: ["createdAt", "updatedAt"] },
   });
+
 
   return res.json({ ...group.toJSON(), GroupImages, Organizer, Venues });
 });
