@@ -32,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Event_Image",
-      getters: {
+      getterMethods: {
         createdAt() {
           const rawValue = this.getDataValue('createdAt');
           return moment(rawValue).format('YYYY-MM-DD HH:mm:ss');

@@ -58,7 +58,7 @@ module.exports = (sequelize, DataTypes) => {
           // console.log(`Incremented numAttending for Event ${event.id}`);
         },
       },
-      getters: {
+      getterMethods: {
         createdAt() {
           const rawValue = this.getDataValue('createdAt');
           return moment(rawValue).format('YYYY-MM-DD HH:mm:ss');

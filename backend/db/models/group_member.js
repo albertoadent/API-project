@@ -57,7 +57,7 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: "Group_Member",
       defaultScope: ["userId", "groupId", "role", "id"],
-      getters: {
+      getterMethods: {
         createdAt() {
           const rawValue = this.getDataValue('createdAt');
           return moment(rawValue).format('YYYY-MM-DD HH:mm:ss');

@@ -132,7 +132,7 @@ module.exports = (sequelize, DataTypes) => {
           exclude: ["hashedPassword", "email", "createdAt", "updatedAt"],
         },
       },
-      getters: {
+      getterMethods: {
         createdAt() {
           const rawValue = this.getDataValue('createdAt');
           return moment(rawValue).format('YYYY-MM-DD HH:mm:ss');
