@@ -1,5 +1,6 @@
 "use strict";
 const { Model, Validator } = require("sequelize");
+const moment = require('moment');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     /**
@@ -131,6 +132,16 @@ module.exports = (sequelize, DataTypes) => {
           exclude: ["hashedPassword", "email", "createdAt", "updatedAt"],
         },
       },
+      getters: {
+        createdAt() {
+          const rawValue = this.getDataValue('createdAt');
+          return moment(rawValue).format('YYYY-MM-DD HH:mm:ss');
+        },
+        updatedAt() {
+          const rawValue = this.getDataValue('updatedAt');
+          return moment(rawValue).format('YYYY-MM-DD HH:mm:ss');
+        }
+      }
     }
   );
 

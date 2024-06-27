@@ -1,5 +1,6 @@
 "use strict";
 const { Model } = require("sequelize");
+const moment = require('moment');
 module.exports = (sequelize, DataTypes) => {
   class Group extends Model {
     /**
@@ -174,6 +175,16 @@ module.exports = (sequelize, DataTypes) => {
           }
         },
       },
+      getters: {
+        createdAt() {
+          const rawValue = this.getDataValue('createdAt');
+          return moment(rawValue).format('YYYY-MM-DD HH:mm:ss');
+        },
+        updatedAt() {
+          const rawValue = this.getDataValue('updatedAt');
+          return moment(rawValue).format('YYYY-MM-DD HH:mm:ss');
+        }
+      }
     }
   );
   return Group;

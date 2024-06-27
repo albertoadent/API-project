@@ -1,6 +1,7 @@
 "use strict";
 const { Model } = require("sequelize");
 const { validateValidId } = require("../../utils/validation");
+const moment = require('moment');
 module.exports = (sequelize, DataTypes) => {
   class Event extends Model {
     /**
@@ -115,6 +116,10 @@ module.exports = (sequelize, DataTypes) => {
             }
           },
         },
+        get() {
+          const rawValue = this.getDataValue("startDate");
+          return moment(rawValue).format("YYYY-MM-DD HH:mm:ss");
+        },
       },
       endDate: {
         type: DataTypes.DATE,
@@ -127,6 +132,10 @@ module.exports = (sequelize, DataTypes) => {
               throw new Error("End date is less than start date");
             }
           },
+        },
+        get() {
+          const rawValue = this.getDataValue("endDate");
+          return moment(rawValue).format("YYYY-MM-DD HH:mm:ss");
         },
       },
       capacity: {
@@ -177,12 +186,15 @@ module.exports = (sequelize, DataTypes) => {
       },
       hooks: {
         beforeCreate(event, options) {
-          if(!event.venueId){
+          if (!event.venueId) {
             event.venueId = null;
           }
         },
         async afterCreate(event, options) {
-          if (options.previewImage && typeof options.previewImage === "string") {
+          if (
+            options.previewImage &&
+            typeof options.previewImage === "string"
+          ) {
             const image = await sequelize.models.Image.create({
               url: options.previewImage,
               preview: true,
@@ -192,6 +204,16 @@ module.exports = (sequelize, DataTypes) => {
               eventId: event.id,
             });
           }
+        },
+      },
+      getters: {
+        createdAt() {
+          const rawValue = this.getDataValue("createdAt");
+          return moment(rawValue).format("YYYY-MM-DD HH:mm:ss");
+        },
+        updatedAt() {
+          const rawValue = this.getDataValue("updatedAt");
+          return moment(rawValue).format("YYYY-MM-DD HH:mm:ss");
         },
       },
     }
