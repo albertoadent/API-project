@@ -132,7 +132,7 @@ router.get("/:eventId", exists(), async (req, res, next) => {
   res.json({ ...event.toJSON(), EventImages: event.Images, Images: undefined });
 });
 
-router.post("/:eventId/images", fullCheck(), async (req, res, next) => {
+router.post("/:eventId/images", fullCheck(['organizer','co-host','member']), async (req, res, next) => {
   const { event } = req;
   try {
     const image = await event.createImage(req.body);
@@ -393,13 +393,13 @@ router.delete(
       
       // console.log(otherUser.toJSON(),user.toJSON(),group.organizerId)
       if ((!isAdmin) && (!isSelf)) {
-        return res.status(404).json({
+        return res.status(403).json({
           message: "Only the User or organizer may delete an Attendance",
         });
       }
 
       if (!attendance) {
-        return res.status(403).json({
+        return res.status(404).json({
           message: "Attendance does not exist for this User",
         });
       }
