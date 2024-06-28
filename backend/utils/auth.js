@@ -80,14 +80,14 @@ const requireAuth = function (req, _res, next) {
 };
 
 const isAuthorizedMember =
-  (allowedRoles = ["organizer"], CheckModel) =>
+  (allowedRoles = ["organizer"], CheckModel = Group) =>
   async (req, res, next) => {
     try {
       const { user } = req;
       // console.log(allowedRoles);
 
       const memberships = await user.getGroup_Members({
-        attributes: ["id", "groupId", "userId","role"],
+        attributes: ["id", "groupId", "userId", "role"],
         where: {
           role: { [Sequelize.Op.in]: allowedRoles },
         },
@@ -245,7 +245,7 @@ const isAuthorizedMember =
         // console.log(validGroupIds);
 
         try {
-          group = await modelInstance.getGroup();
+          group = req.group || (await modelInstance.getGroup());
         } catch {
           [group] = await modelInstance.getGroups({
             where: {
@@ -255,8 +255,7 @@ const isAuthorizedMember =
         }
 
         try {
-          event =
-            Model === Event ? modelInstance : await modelInstance.getEvent();
+          event = req.event || (await modelInstance.getEvent());
         } catch {
           [event] = await modelInstance.getEvents({
             where: {
@@ -311,7 +310,7 @@ const exists = (messageModel) => async (req, res, next) => {
       const Model = require(`../db/models`)[capitalizedModelName];
       // console.log(Model);
       const modelInstance = await Model.findByPk(req.params[modelId]);
-      console.log('modelInstance')
+      console.log("modelInstance");
       if (!modelInstance) {
         err = new Error(
           `${

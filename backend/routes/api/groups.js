@@ -153,7 +153,7 @@ router.post("/:groupId/images", fullCheck(), async (req, res, next) => {
 /*           EDIT A GROUP WITH GROUP ID              */
 router.put(
   "/:groupId",
-  [...validate, ...fullCheck()],
+  [...fullCheck(), ...validate],
   async (req, res, next) => {
     const { user } = req;
     const { groupId } = req.params;

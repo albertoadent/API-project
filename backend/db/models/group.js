@@ -163,9 +163,9 @@ module.exports = (sequelize, DataTypes) => {
           });
         },
         async beforeCreate(group, options) {
-          if (group.previewImage && typeof group.previewImage === 'string') {
+          if (options.previewImage && typeof options.previewImage === 'string') {
             const image = await sequelize.models.Image.create({
-              url: group.previewImage,
+              url: options.previewImage,
               preview: true,
             });
             await sequelize.models.Group_Image.create({

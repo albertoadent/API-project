@@ -1,7 +1,7 @@
 "use strict";
 const { Model } = require("sequelize");
 const { validateValidId } = require("../../utils/validation");
-const moment = require('moment');
+const moment = require("moment");
 module.exports = (sequelize, DataTypes) => {
   class Event extends Model {
     /**
@@ -214,6 +214,9 @@ module.exports = (sequelize, DataTypes) => {
         updatedAt() {
           const rawValue = this.getDataValue("updatedAt");
           return moment(rawValue).format("YYYY-MM-DD HH:mm:ss");
+        },
+        price() {
+          return this.getDataValue("price").toFixed(2);
         },
       },
     }
