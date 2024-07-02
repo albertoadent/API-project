@@ -215,9 +215,6 @@ module.exports = (sequelize, DataTypes) => {
           const rawValue = this.getDataValue("updatedAt");
           return moment(rawValue).format("YYYY-MM-DD HH:mm:ss");
         },
-        price() {
-          return this.getDataValue("price").toFixed(2);
-        },
       },
     }
   );
