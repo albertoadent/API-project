@@ -58,12 +58,12 @@ router.post("/", validateSignup, async (req, res, next) => {
       user: safeUser,
     });
   } catch (err) {
-    if (err.name === "SequelizeUniqueConstraintError") {
-      err.errors.forEach((error) => {
-        error.message = `User with that ${error.path} already exists`;
-      });
-    }
-    err.message = "User already exists";
+    // if (err.name === "SequelizeUniqueConstraintError") {
+    //   err.errors.forEach((error) => {
+    //     error.message = `User with that ${error.path} already exists`;
+    //   });
+    // }
+    // err.message = "User already exists";
     next(err);
   }
 });

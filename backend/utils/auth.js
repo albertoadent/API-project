@@ -2,11 +2,15 @@ const jwt = require("jsonwebtoken");
 const { jwtConfig } = require("../config");
 const {
   User,
+  Venue,
   Group,
   Group_Member,
   Sequelize,
   Event,
   Event_Member,
+  Image,
+  Event_Image,
+  Group_Image,
 } = require("../db/models");
 const { check } = require("express-validator");
 
@@ -79,6 +83,127 @@ const requireAuth = function (req, _res, next) {
   return next(err);
 };
 
+const getGroups = async (instance, Model) => {
+  if (!instance) throw new Error("instance is null");
+  console.log(instance.toJSON(), Model.name, "in get groups function");
+  switch (Model) {
+    case User:
+    case Image:
+      return instance.getGroups();
+    case Group:
+      return [instance];
+    case Group_Member:
+    case Group_Image:
+    case Event:
+    case Venue:
+      const group = await instance.getGroup();
+      return [group];
+    case Event_Image:
+      const event = await instance.getEvent();
+      return getGroups(event, Event);
+    case Event_Member:
+      const membership = await instance.getGroup_Member();
+      return getGroups(membership, Group_Member);
+    default:
+      throw new Error("relationship not supported for this model");
+  }
+};
+
+const hasAccess = async (group, user, clearance = ["organizer"]) => {
+  console.log(
+    group.toJSON(),
+    user.toJSON(),
+    clearance,
+    "in has access function"
+  );
+  const [hasClearance] = await user.getGroup_Members({
+    where: {
+      groupId: group.id,
+      role: { [Sequelize.Op.in]: clearance },
+    },
+  });
+  return !!hasClearance;
+};
+
+const checkUserAccessTo = async (user, Model, modelId, clearance) => {
+  console.log(
+    user.toJSON(),
+    Model.name,
+    modelId,
+    clearance,
+    "in check user access to function"
+  );
+  const instance = await Model.findByPk(modelId); //should be checked by exists
+  if (!instance) {
+    return false;
+  }
+  if (Model === User) {
+    await populateUser(instance);
+  }
+  const groups = await getGroups(instance, Model);
+  if (!groups[0]) return false;
+  for (const group of groups) {
+    const hasAccessBool = await hasAccess(group, user, clearance);
+    if (hasAccessBool) return true;
+  }
+  return false;
+};
+
+const clearForAccess = (allowedRoles) => async (req, res, next) => {
+  await populateUser(req.user);
+  const paramArray = Object.keys(req.params);
+  console.log(paramArray, allowedRoles, "In clear for access function");
+  try {
+    for (const param of paramArray) {
+      const modelName =
+        param.charAt(0).toUpperCase() + param.slice(1, param.indexOf("Id"));
+      const Model = require(`../db/models`)[modelName];
+      const isClear = await checkUserAccessTo(
+        req.user,
+        Model,
+        req.params[param],
+        allowedRoles
+      );
+      if (!isClear) {
+        console.log("not clear");
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      console.log("clear");
+    }
+    return next();
+  } catch (err) {
+    next(err);
+  }
+};
+
+const populateUser = async (user) => {
+  const memberships = await user.getGroup_Members({
+    attributes: ["id", "groupId", "userId", "role"],
+  });
+  console.log(memberships.map((em) => em.toJSON()));
+  user.memberships = memberships;
+
+  let validGroupIds = memberships.map((membership) => membership.groupId);
+
+  const attendances = await Promise.all(
+    memberships.flatMap(async (member) => {
+      const attendances = await Event_Member.findAll({
+        attributes: ["id", "groupMemberId", "eventId"],
+        where: {
+          groupMemberId: member.id,
+        },
+      });
+
+      return attendances.map((attend) => attend);
+    })
+  );
+  user.attendances = attendances.flatMap((attendace) =>
+    attendace.map((ele) => ele)
+  );
+
+  console.log(user.attendances.map((e) => e.toJSON()));
+};
+
 const isAuthorizedMember =
   (allowedRoles = ["organizer"], CheckModel = Group) =>
   async (req, res, next) => {
@@ -103,7 +228,6 @@ const isAuthorizedMember =
           const attendances = await member.getEvent_Members({
             attributes: ["id", "groupMemberId", "eventId"],
           });
-
           return attendances.map((attend) => attend);
         })
       );
@@ -320,7 +444,10 @@ const exists = (messageModel) => async (req, res, next) => {
         err.status = 404;
         throw err;
       }
-
+      if (modelName === "user") {
+        await populateUser(modelInstance);
+        req.otherUser = modelInstance;
+      }
       if (!req[modelName]) req[modelName] = modelInstance;
       // console.log(req[modelName]);
     });
@@ -331,14 +458,10 @@ const exists = (messageModel) => async (req, res, next) => {
   }
 };
 
-const fullCheck = (
-  allowedRoles = ["organizer"],
-  Model = Group,
-  existsMessageModel
-) => [
+const fullCheck = (allowedRoles = ["organizer"]) => [
   requireAuth,
-  exists(existsMessageModel),
-  isAuthorizedMember(allowedRoles, Model),
+  exists(),
+  clearForAccess(allowedRoles),
 ];
 
 // backend/utils/auth.js
@@ -349,6 +472,6 @@ module.exports = {
   restoreUser,
   requireAuth,
   exists,
-  isAuthorizedMember,
+  clearForAccess,
   fullCheck,
 };

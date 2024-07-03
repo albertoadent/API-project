@@ -19,7 +19,6 @@ const {
   restoreUser,
   requireAuth,
   exists,
-  isAuthorizedMember,
   fullCheck,
 } = require("../../utils/auth");
 const { check } = require("express-validator");
@@ -93,7 +92,6 @@ router.get("/:groupId", [exists()], async (req, res) => {
     joinTableAttributes: [],
   });
 
-
   const Organizer = await group.getOrganizer({
     attributes: ["id", "firstName", "lastName"],
   });
@@ -138,10 +136,15 @@ router.post("/", [requireAuth, ...validate], async (req, res, next) => {
 /*           CREATE IMAGE WITH A GROUP ID              */
 router.post("/:groupId/images", fullCheck(), async (req, res, next) => {
   const { groupId } = req.params;
+  const {group} = req;
   try {
-    const group = await Group.findByPk(groupId);
+    // const group = await Group.findByPk(groupId);
 
     const img = await group.createImage(req.body);
+    // const groupImage = await group.createGroup_Image({
+    //   groupId,
+    //   imageId:img
+    // })
     res
       .status(201)
       .json({ ...img.toJSON(), updatedAt: undefined, createdAt: undefined });

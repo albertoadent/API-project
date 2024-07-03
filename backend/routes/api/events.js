@@ -19,7 +19,7 @@ const {
   restoreUser,
   requireAuth,
   exists,
-  isAuthorizedMember,
+  clearForAccess,
   fullCheck,
 } = require("../../utils/auth");
 const event = require("../../db/models/event");
@@ -136,6 +136,7 @@ router.post("/:eventId/images", fullCheck(['organizer','co-host','member']), asy
   const { event } = req;
   try {
     const image = await event.createImage(req.body);
+    const event_image = await event.createEvent_Image({imageId:image.id});
     const safeImage = image.toJSON();
     res.status(201).json({
       id: safeImage.id,
@@ -287,12 +288,13 @@ router.post(
   async (req, res, next) => {
     const { event, user } = req;
     const [validMembership] = user.memberships.filter(
-      (membership) => membership.groupId === event.groupId
+      (membership) => membership.groupId === event.groupId && membership.userId === user.id
     );
     try {
-      const [alreadyDid] = await validMembership.getEvent_Members({
+      const [alreadyDid] = await Event_Member.findAll({
         where: {
           eventId: event.id,
+          groupMemberId:validMembership.id
         },
       });
       if (alreadyDid) {
@@ -305,7 +307,8 @@ router.post(
             : "User is already an attendee of the event";
         throw err;
       }
-      const data = await validMembership.createEvent_Member({
+      const data = await Event_Member.create({
+        groupMemberId:validMembership.id,
         eventId: event.id,
       });
       res.status(201).json({...data.toJSON(),createdAt:undefined,updatedAt:undefined});

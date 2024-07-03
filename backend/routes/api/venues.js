@@ -9,7 +9,6 @@ const {
   restoreUser,
   requireAuth,
   exists,
-  isAuthorizedMember,
   fullCheck
 } = require("../../utils/auth");
 
